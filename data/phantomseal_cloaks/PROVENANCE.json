@@ -1,0 +1,155 @@
+{
+  "description": "Public SimSwap crop_224 demonstration portraits used as a small local cloak bank.",
+  "adaptation_notice": "This is not PhantomSeal's VGGFace2 experimental cloak bank. Paper protection/tracing scores do not apply to this replacement.",
+  "source_repository": "https://github.com/neuralchen/SimSwap",
+  "source_commit": "bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780",
+  "source_directory": "https://github.com/neuralchen/SimSwap/tree/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224",
+  "upstream_license": "SimSwap repository: CC-BY-NC-4.0; images retain applicable original rights.",
+  "image_count": 24,
+  "files": [
+    {
+      "path": "data/phantomseal_cloaks/1_source.jpg",
+      "bytes": 14813,
+      "sha256": "032eca0c71499617e3a721edd752526d0379a92818eeb18589d04b4c31205ea4",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/1_source.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/2.jpg",
+      "bytes": 13568,
+      "sha256": "b6c48b0b8cfd4fb0ef671714ddcf2797bba3c9b6b354738fad14ed29b9c4bc5f",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/2.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/6.jpg",
+      "bytes": 22018,
+      "sha256": "4d5ffb8faf97dc43d0a0726d346e572dbdc7869de58e5ffc24154e6bf8e1c44f",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/6.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/cage.jpg",
+      "bytes": 19534,
+      "sha256": "ff7b5427526b8d358cc28e2cc38695de4fb4d0324c5303ce6b09e852c1508043",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/cage.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/dnl.jpg",
+      "bytes": 10590,
+      "sha256": "8fe4f9e144e4bd5d4d7f9208e78e52b8c2eac8abadbea9a0ddfc4a7270b99477",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/dnl.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/ds.jpg",
+      "bytes": 15098,
+      "sha256": "cb2b47206958cd6897465615083ccf98d65979ce44af91b73d821f51ec358c8b",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/ds.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/gdg.jpg",
+      "bytes": 13469,
+      "sha256": "96affaa78d55e2781c340a9614e46885f421cd7732f14b25f9a01d3c21b4aaa0",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/gdg.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/gy.jpg",
+      "bytes": 12860,
+      "sha256": "3ff868e8cf03eaa3b7d075db22e73bcace2ef873226cd96cb408b32a2e8b8af5",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/gy.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/hzc.jpg",
+      "bytes": 13330,
+      "sha256": "9250a857ba28bc82cdd5b007410cf882455a08654c1b7cbf20febf146a4fe33f",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/hzc.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/hzxc.jpg",
+      "bytes": 12944,
+      "sha256": "dce78b58eaaffea9116101e21c9daf0a48813e57338a4228e8a54d017abdfcd5",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/hzxc.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/james.jpg",
+      "bytes": 19688,
+      "sha256": "7f8117b8fc124b2fe20d07d38ba864c3aede6c5b094ddd2a4a571cad1f7cb8b0",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/james.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/jl.jpg",
+      "bytes": 18249,
+      "sha256": "c77c97d46f3540847738933baaa39620f82a063cd60f39a5e79a5b354902f257",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/jl.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/lcw.jpg",
+      "bytes": 9762,
+      "sha256": "f12d3f0209bd15b6a40d9f927fb64f1d0d02454638e11fd6d9a750e0d795dc4f",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/lcw.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/ljm.jpg",
+      "bytes": 8059,
+      "sha256": "8ecf9a25d153bc01c409fac378862d98b7b139fc8b02c9b525f8c99c5f3bde33",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/ljm.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/ljm2.jpg",
+      "bytes": 9301,
+      "sha256": "a05598c4308d2f4cbbbd79e25ff8d60a4f51a26ec896b38280553cd89df2f86b",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/ljm2.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/ljm3.jpg",
+      "bytes": 8740,
+      "sha256": "fc4353ae9ee828e6bc6f6eba1b28fff462e2b3b861a0cc1312ad71b7e7f58821",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/ljm3.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/mars2.jpg",
+      "bytes": 10811,
+      "sha256": "a750f120d2779c367c06160fa80e63726ba5ce79e1131eca7d7e4244e7f0032b",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/mars2.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/mouth_open.jpg",
+      "bytes": 17956,
+      "sha256": "ddb35a1fbe7ade48f89f0edce17844ff4c8e28f7fd985ede2e0505f777d3e090",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/mouth_open.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/mtdm.jpg",
+      "bytes": 13787,
+      "sha256": "863177bd01c2df8bd29a1002d99dfe8d1189e8e06dfb8f895caa732c08413f14",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/mtdm.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/trump.jpg",
+      "bytes": 15167,
+      "sha256": "3da0785338f652917fd737e1c173729624c9371b38ca86cd8ff88c8ce4d8aa4d",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/trump.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/wlh.jpg",
+      "bytes": 20428,
+      "sha256": "57db104f0c18df55a6a5e7e98eb2d8a06799c566457c13472a9f7b525adf0778",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/wlh.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/zjl.jpg",
+      "bytes": 14886,
+      "sha256": "3ce5ccc111390220c4d7962bf5cac063fce7b4edd1f10f129ace307b72d7390b",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/zjl.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/zrf.jpg",
+      "bytes": 16077,
+      "sha256": "96726449dd032bf34bfaf06da77a5f7d65aa631382dc1dd0d6ef86275eadc2fd",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/zrf.jpg"
+    },
+    {
+      "path": "data/phantomseal_cloaks/zxy.jpg",
+      "bytes": 11749,
+      "sha256": "bf7a2d793b59632e80de34248a020b776eeb05dcf01f46d47e0fdada104c71ef",
+      "source_url": "https://raw.githubusercontent.com/neuralchen/SimSwap/bd7b7686a17f41dd11cfcd5d82f7e4c5eb94b780/crop_224/zxy.jpg"
+    }
+  ]
+}

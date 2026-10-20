@@ -1,0 +1,17 @@
+Upstream README license statement:
+Source: https://github.com/deepinsight/insightface#license
+
+
+
+The code of InsightFace is released under the MIT License. There is no limitation for both academic and commercial usage.
+
+The training data containing the annotation (and the models trained with these data) are available for non-commercial research purposes only.
+
+Both manual-downloading models from our github repo and auto-downloading models with our [python-library](python-package) follow the above license policy(which is for non-commercial research purposes only).
+
+`2025-11-24 Update:`
+
+1. For inswapper series face swap models (e.g., inswapper_128.onnx/[inswapper-512-live](https://github.com/deepinsight/inswapper-512-live)), please contact [contact@insightface.ai](mailto:contact@insightface.ai) for licensing and additional support.
+2. For open-sourced face recognition models (e.g., buffalo_l package), please contact [recognition-oss-pack@insightface.ai](mailto:recognition-oss-pack@insightface.ai) for licensing.
+3. For advanced face recognition SDK and models (e.g., InspireFace SDK), please contact [contact@insightface.ai](mailto:contact@insightface.ai) for licensing and additional support.
+

@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-20",
+  "purpose": "Operational end-to-end check of the new independent checkout, not defense efficacy evidence",
+  "input": "FaceShield public data/test/image.png, explicitly enlarged to 1280x1280 before upload; reused identity, not native high-resolution evidence",
+  "output_dimensions": [
+    1280,
+    1280
+  ],
+  "params": {
+    "mode": "phantomseal_faceshield",
+    "max_size": 1280,
+    "iterations": 30,
+    "noise_clamp": 12,
+    "step_size": 1,
+    "phantom_iterations": 1000
+  },
+  "protection_seconds": 137.0,
+  "test_seconds": 7.5,
+  "checks": {
+    "full_ensemble_and_214_bank_ready": true,
+    "default_chain_completed": true,
+    "intermediate_and_final_png_present": true,
+    "final_png_download_decoded": true,
+    "png_and_jpeg95_have_three_real_swap_rows_each": true,
+    "ui_requires_unchecked_visual_confirmation": true,
+    "python_tests_passed": 81,
+    "powershell_and_frontend_checks_passed": true
+  },
+  "conditions": [
+    {
+      "name": "png",
+      "rows": [
+        {
+          "key": "clean",
+          "score": 0.8555985689163208,
+          "source_detected": true,
+          "swap_detected": true,
+          "status": "ok"
+        },
+        {
+          "key": "stage1",
+          "score": 0.8418607115745544,
+          "source_detected": true,
+          "swap_detected": true,
+          "status": "ok"
+        },
+        {
+          "key": "final",
+          "score": 0.8084444999694824,
+          "source_detected": true,
+          "swap_detected": true,
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "name": "jpeg95",
+      "rows": [
+        {
+          "key": "clean",
+          "score": 0.856037974357605,
+          "source_detected": true,
+          "swap_detected": true,
+          "status": "ok"
+        },
+        {
+          "key": "stage1",
+          "score": 0.8215761184692383,
+          "source_detected": true,
+          "swap_detected": true,
+          "status": "ok"
+        },
+        {
+          "key": "final",
+          "score": 0.8002715110778809,
+          "source_detected": true,
+          "swap_detected": true,
+          "status": "ok"
+        }
+      ]
+    }
+  ],
+  "interpretation": "No manual baseline likeness acceptance or efficacy verdict is recorded. Numerical scores are raw diagnostic measurements."
+}

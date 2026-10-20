@@ -1,0 +1,704 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-20",
+  "description": "Path-free numerical snapshot of the public local SimSwap experiment. No private photos or biometric embeddings.",
+  "minimum_baseline_cosine": 0.8,
+  "manual_baseline_inspection_required": true,
+  "summary": {
+    "included_pairs": 6,
+    "sources_with_included_pairs": 1,
+    "mean_scores": {
+      "clean": 0.8234345018863678,
+      "stage1": 0.8085857629776001,
+      "final": 0.817804217338562
+    },
+    "mean_delta_final_minus_stage1": 0.009218454360961914,
+    "source_weighted_mean_scores": {
+      "clean": 0.8234345018863678,
+      "stage1": 0.8085857629776001,
+      "final": 0.817804217338562
+    },
+    "source_weighted_delta_final_minus_stage1": 0.009218454360961914,
+    "pair_comparison_counts": {
+      "chain_better": 2,
+      "ps_better": 4,
+      "ties": 0
+    },
+    "source_comparison_counts": {
+      "chain_better": 0,
+      "ps_better": 1,
+      "ties": 0
+    },
+    "per_source": [
+      {
+        "source_id": "portrait1280",
+        "total_pairs": 6,
+        "included_pairs": 6,
+        "mean_scores": {
+          "clean": 0.8234345018863678,
+          "stage1": 0.8085857629776001,
+          "final": 0.817804217338562
+        },
+        "mean_delta_final_minus_stage1": 0.009218454360961914,
+        "direction": "ps_better",
+        "complete_pairs": 6,
+        "qualified_pairs": 6,
+        "weak_baseline_pairs": 0,
+        "excluded_pairs": 0
+      }
+    ],
+    "total_pairs": 6,
+    "complete_pairs": 6,
+    "qualified_pairs": 6,
+    "excluded_pairs": 0,
+    "incomplete_pairs": 0,
+    "weak_baseline_pairs": 0,
+    "total_sources": 1,
+    "sources_with_complete_pairs": 1,
+    "sources_with_qualified_pairs": 1,
+    "minimum_baseline": 0.8,
+    "manual_baseline_inspection_required": true,
+    "baseline_gate_note": "User-requested heuristic quality gate; not a validated universal FaceNet threshold. Qualified comparisons remain exploratory until manual baseline inspection.",
+    "baseline_gate_counts": {
+      "pass": 6,
+      "weak": 0,
+      "unavailable": 0
+    },
+    "raw": {
+      "included_pairs": 6,
+      "sources_with_included_pairs": 1,
+      "mean_scores": {
+        "clean": 0.8234345018863678,
+        "stage1": 0.8085857629776001,
+        "final": 0.817804217338562
+      },
+      "mean_delta_final_minus_stage1": 0.009218454360961914,
+      "source_weighted_mean_scores": {
+        "clean": 0.8234345018863678,
+        "stage1": 0.8085857629776001,
+        "final": 0.817804217338562
+      },
+      "source_weighted_delta_final_minus_stage1": 0.009218454360961914,
+      "pair_comparison_counts": {
+        "chain_better": 2,
+        "ps_better": 4,
+        "ties": 0
+      },
+      "source_comparison_counts": {
+        "chain_better": 0,
+        "ps_better": 1,
+        "ties": 0
+      },
+      "per_source": [
+        {
+          "source_id": "portrait1280",
+          "total_pairs": 6,
+          "included_pairs": 6,
+          "mean_scores": {
+            "clean": 0.8234345018863678,
+            "stage1": 0.8085857629776001,
+            "final": 0.817804217338562
+          },
+          "mean_delta_final_minus_stage1": 0.009218454360961914,
+          "direction": "ps_better",
+          "complete_pairs": 6
+        }
+      ],
+      "complete_pairs": 6,
+      "excluded_pairs": 0,
+      "note": "Unfiltered descriptive numerical statistics, including weak clean baselines; not evidence of protection efficacy."
+    },
+    "tie_epsilon": 1e-06,
+    "detection_failures": {
+      "clean": {
+        "source_detection_failed": 0,
+        "swap_detection_failed": 0,
+        "swap_not_attempted_after_source_failure": 0,
+        "missing_or_invalid_detection_flags": 0,
+        "either_detection_not_successful": 0
+      },
+      "stage1": {
+        "source_detection_failed": 0,
+        "swap_detection_failed": 0,
+        "swap_not_attempted_after_source_failure": 0,
+        "missing_or_invalid_detection_flags": 0,
+        "either_detection_not_successful": 0
+      },
+      "final": {
+        "source_detection_failed": 0,
+        "swap_detection_failed": 0,
+        "swap_not_attempted_after_source_failure": 0,
+        "missing_or_invalid_detection_flags": 0,
+        "either_detection_not_successful": 0
+      }
+    },
+    "invalid_scores_by_method": {
+      "clean": 0,
+      "stage1": 0,
+      "final": 0
+    },
+    "invalid_methods_by_method": {
+      "clean": 0,
+      "stage1": 0,
+      "final": 0
+    },
+    "baseline_sanity_checks": {
+      "available_pairs": 6,
+      "passed": 6,
+      "failed": 0,
+      "unavailable": 0
+    },
+    "excluded_pair_details": [],
+    "limitations": [
+      "Lower FaceNet cosine means the swap is less similar to the CLEAN source identity. It is a relative identity-copying metric, not a calibrated success probability.",
+      "Primary numerical comparisons require a complete paired triple, successful source/output face detection, finite scores, and a clean-swap cosine at or above the configured minimum baseline. All unfiltered numerical values and images remain available.",
+      "The default 0.80 baseline quality gate is a user-requested heuristic, not a validated universal FaceNet identity threshold or a probability. Passing it only qualifies a pair for exploratory numerical comparison; manual baseline inspection is still required before any protection conclusion.",
+      "The primary aggregate delta averages target-level differences within each source, then gives each source equal weight. Pair-level means and counts are descriptive; repeated targets are not independent source identities.",
+      "FaceNet was used for cloak selection, so it is not an entirely unseen evaluator. SimSwap was an optimization branch of PhantomSeal, so this is not an unseen-swapper transfer test.",
+      "One swapper and a small public sample cannot establish general protection, robustness to image processing, or protection against other tools. No p-values or thresholded attack-success rates are reported.",
+      "A negative final-minus-PhantomSeal delta favors the chain for this metric; a positive delta favors PhantomSeal alone. Detection failures are separate outcomes, not invented zero similarity scores.",
+      "PNG and JPEG95 conditions are reported separately because processing can reverse their ordering. All similarities should use the original clean PNG identity reference; the clean swap baseline itself uses the same processing condition as the protected sources.",
+      "The additional source-versus-target baseline sanity check is reported separately. The configured clean-source quality gate controls primary numerical inclusion; neither check substitutes for visually confirming a recognizable clean swap.",
+      "This evaluates protected photos in the source-identity role: the attacker extracts their identity for insertion into another face. It does not test preventing replacement of the protected photo's face when that photo is the destination.",
+      "PhantomSeal alone and the chain are compared at their current product settings, not at matched perturbation budgets. Any additional protection may come with greater image distortion; this is not a matched-budget ablation."
+    ],
+    "by_condition": {
+      "jpeg95": {
+        "included_pairs": 3,
+        "sources_with_included_pairs": 1,
+        "mean_scores": {
+          "clean": 0.8241584499677023,
+          "stage1": 0.8094147443771362,
+          "final": 0.8181758920351664
+        },
+        "mean_delta_final_minus_stage1": 0.008761147658030191,
+        "source_weighted_mean_scores": {
+          "clean": 0.8241584499677023,
+          "stage1": 0.8094147443771362,
+          "final": 0.8181758920351664
+        },
+        "source_weighted_delta_final_minus_stage1": 0.008761147658030191,
+        "pair_comparison_counts": {
+          "chain_better": 1,
+          "ps_better": 2,
+          "ties": 0
+        },
+        "source_comparison_counts": {
+          "chain_better": 0,
+          "ps_better": 1,
+          "ties": 0
+        },
+        "per_source": [
+          {
+            "source_id": "portrait1280",
+            "total_pairs": 3,
+            "included_pairs": 3,
+            "mean_scores": {
+              "clean": 0.8241584499677023,
+              "stage1": 0.8094147443771362,
+              "final": 0.8181758920351664
+            },
+            "mean_delta_final_minus_stage1": 0.008761147658030191,
+            "direction": "ps_better",
+            "complete_pairs": 3,
+            "qualified_pairs": 3,
+            "weak_baseline_pairs": 0,
+            "excluded_pairs": 0
+          }
+        ],
+        "total_pairs": 3,
+        "complete_pairs": 3,
+        "qualified_pairs": 3,
+        "excluded_pairs": 0,
+        "incomplete_pairs": 0,
+        "weak_baseline_pairs": 0,
+        "total_sources": 1,
+        "sources_with_complete_pairs": 1,
+        "sources_with_qualified_pairs": 1,
+        "minimum_baseline": 0.8,
+        "manual_baseline_inspection_required": true,
+        "baseline_gate_note": "User-requested heuristic quality gate; not a validated universal FaceNet threshold. Qualified comparisons remain exploratory until manual baseline inspection.",
+        "baseline_gate_counts": {
+          "pass": 3,
+          "weak": 0,
+          "unavailable": 0
+        },
+        "raw": {
+          "included_pairs": 3,
+          "sources_with_included_pairs": 1,
+          "mean_scores": {
+            "clean": 0.8241584499677023,
+            "stage1": 0.8094147443771362,
+            "final": 0.8181758920351664
+          },
+          "mean_delta_final_minus_stage1": 0.008761147658030191,
+          "source_weighted_mean_scores": {
+            "clean": 0.8241584499677023,
+            "stage1": 0.8094147443771362,
+            "final": 0.8181758920351664
+          },
+          "source_weighted_delta_final_minus_stage1": 0.008761147658030191,
+          "pair_comparison_counts": {
+            "chain_better": 1,
+            "ps_better": 2,
+            "ties": 0
+          },
+          "source_comparison_counts": {
+            "chain_better": 0,
+            "ps_better": 1,
+            "ties": 0
+          },
+          "per_source": [
+            {
+              "source_id": "portrait1280",
+              "total_pairs": 3,
+              "included_pairs": 3,
+              "mean_scores": {
+                "clean": 0.8241584499677023,
+                "stage1": 0.8094147443771362,
+                "final": 0.8181758920351664
+              },
+              "mean_delta_final_minus_stage1": 0.008761147658030191,
+              "direction": "ps_better",
+              "complete_pairs": 3
+            }
+          ],
+          "complete_pairs": 3,
+          "excluded_pairs": 0,
+          "note": "Unfiltered descriptive numerical statistics, including weak clean baselines; not evidence of protection efficacy."
+        },
+        "tie_epsilon": 1e-06,
+        "detection_failures": {
+          "clean": {
+            "source_detection_failed": 0,
+            "swap_detection_failed": 0,
+            "swap_not_attempted_after_source_failure": 0,
+            "missing_or_invalid_detection_flags": 0,
+            "either_detection_not_successful": 0
+          },
+          "stage1": {
+            "source_detection_failed": 0,
+            "swap_detection_failed": 0,
+            "swap_not_attempted_after_source_failure": 0,
+            "missing_or_invalid_detection_flags": 0,
+            "either_detection_not_successful": 0
+          },
+          "final": {
+            "source_detection_failed": 0,
+            "swap_detection_failed": 0,
+            "swap_not_attempted_after_source_failure": 0,
+            "missing_or_invalid_detection_flags": 0,
+            "either_detection_not_successful": 0
+          }
+        },
+        "invalid_scores_by_method": {
+          "clean": 0,
+          "stage1": 0,
+          "final": 0
+        },
+        "invalid_methods_by_method": {
+          "clean": 0,
+          "stage1": 0,
+          "final": 0
+        },
+        "baseline_sanity_checks": {
+          "available_pairs": 3,
+          "passed": 3,
+          "failed": 0,
+          "unavailable": 0
+        },
+        "excluded_pair_details": [],
+        "limitations": [
+          "Lower FaceNet cosine means the swap is less similar to the CLEAN source identity. It is a relative identity-copying metric, not a calibrated success probability.",
+          "Primary numerical comparisons require a complete paired triple, successful source/output face detection, finite scores, and a clean-swap cosine at or above the configured minimum baseline. All unfiltered numerical values and images remain available.",
+          "The default 0.80 baseline quality gate is a user-requested heuristic, not a validated universal FaceNet identity threshold or a probability. Passing it only qualifies a pair for exploratory numerical comparison; manual baseline inspection is still required before any protection conclusion.",
+          "The primary aggregate delta averages target-level differences within each source, then gives each source equal weight. Pair-level means and counts are descriptive; repeated targets are not independent source identities.",
+          "FaceNet was used for cloak selection, so it is not an entirely unseen evaluator. SimSwap was an optimization branch of PhantomSeal, so this is not an unseen-swapper transfer test.",
+          "One swapper and a small public sample cannot establish general protection, robustness to image processing, or protection against other tools. No p-values or thresholded attack-success rates are reported.",
+          "A negative final-minus-PhantomSeal delta favors the chain for this metric; a positive delta favors PhantomSeal alone. Detection failures are separate outcomes, not invented zero similarity scores.",
+          "PNG and JPEG95 conditions are reported separately because processing can reverse their ordering. All similarities should use the original clean PNG identity reference; the clean swap baseline itself uses the same processing condition as the protected sources.",
+          "The additional source-versus-target baseline sanity check is reported separately. The configured clean-source quality gate controls primary numerical inclusion; neither check substitutes for visually confirming a recognizable clean swap.",
+          "This evaluates protected photos in the source-identity role: the attacker extracts their identity for insertion into another face. It does not test preventing replacement of the protected photo's face when that photo is the destination.",
+          "PhantomSeal alone and the chain are compared at their current product settings, not at matched perturbation budgets. Any additional protection may come with greater image distortion; this is not a matched-budget ablation."
+        ]
+      },
+      "png": {
+        "included_pairs": 3,
+        "sources_with_included_pairs": 1,
+        "mean_scores": {
+          "clean": 0.8227105538050333,
+          "stage1": 0.807756781578064,
+          "final": 0.8174325426419576
+        },
+        "mean_delta_final_minus_stage1": 0.009675761063893637,
+        "source_weighted_mean_scores": {
+          "clean": 0.8227105538050333,
+          "stage1": 0.807756781578064,
+          "final": 0.8174325426419576
+        },
+        "source_weighted_delta_final_minus_stage1": 0.009675761063893637,
+        "pair_comparison_counts": {
+          "chain_better": 1,
+          "ps_better": 2,
+          "ties": 0
+        },
+        "source_comparison_counts": {
+          "chain_better": 0,
+          "ps_better": 1,
+          "ties": 0
+        },
+        "per_source": [
+          {
+            "source_id": "portrait1280",
+            "total_pairs": 3,
+            "included_pairs": 3,
+            "mean_scores": {
+              "clean": 0.8227105538050333,
+              "stage1": 0.807756781578064,
+              "final": 0.8174325426419576
+            },
+            "mean_delta_final_minus_stage1": 0.009675761063893637,
+            "direction": "ps_better",
+            "complete_pairs": 3,
+            "qualified_pairs": 3,
+            "weak_baseline_pairs": 0,
+            "excluded_pairs": 0
+          }
+        ],
+        "total_pairs": 3,
+        "complete_pairs": 3,
+        "qualified_pairs": 3,
+        "excluded_pairs": 0,
+        "incomplete_pairs": 0,
+        "weak_baseline_pairs": 0,
+        "total_sources": 1,
+        "sources_with_complete_pairs": 1,
+        "sources_with_qualified_pairs": 1,
+        "minimum_baseline": 0.8,
+        "manual_baseline_inspection_required": true,
+        "baseline_gate_note": "User-requested heuristic quality gate; not a validated universal FaceNet threshold. Qualified comparisons remain exploratory until manual baseline inspection.",
+        "baseline_gate_counts": {
+          "pass": 3,
+          "weak": 0,
+          "unavailable": 0
+        },
+        "raw": {
+          "included_pairs": 3,
+          "sources_with_included_pairs": 1,
+          "mean_scores": {
+            "clean": 0.8227105538050333,
+            "stage1": 0.807756781578064,
+            "final": 0.8174325426419576
+          },
+          "mean_delta_final_minus_stage1": 0.009675761063893637,
+          "source_weighted_mean_scores": {
+            "clean": 0.8227105538050333,
+            "stage1": 0.807756781578064,
+            "final": 0.8174325426419576
+          },
+          "source_weighted_delta_final_minus_stage1": 0.009675761063893637,
+          "pair_comparison_counts": {
+            "chain_better": 1,
+            "ps_better": 2,
+            "ties": 0
+          },
+          "source_comparison_counts": {
+            "chain_better": 0,
+            "ps_better": 1,
+            "ties": 0
+          },
+          "per_source": [
+            {
+              "source_id": "portrait1280",
+              "total_pairs": 3,
+              "included_pairs": 3,
+              "mean_scores": {
+                "clean": 0.8227105538050333,
+                "stage1": 0.807756781578064,
+                "final": 0.8174325426419576
+              },
+              "mean_delta_final_minus_stage1": 0.009675761063893637,
+              "direction": "ps_better",
+              "complete_pairs": 3
+            }
+          ],
+          "complete_pairs": 3,
+          "excluded_pairs": 0,
+          "note": "Unfiltered descriptive numerical statistics, including weak clean baselines; not evidence of protection efficacy."
+        },
+        "tie_epsilon": 1e-06,
+        "detection_failures": {
+          "clean": {
+            "source_detection_failed": 0,
+            "swap_detection_failed": 0,
+            "swap_not_attempted_after_source_failure": 0,
+            "missing_or_invalid_detection_flags": 0,
+            "either_detection_not_successful": 0
+          },
+          "stage1": {
+            "source_detection_failed": 0,
+            "swap_detection_failed": 0,
+            "swap_not_attempted_after_source_failure": 0,
+            "missing_or_invalid_detection_flags": 0,
+            "either_detection_not_successful": 0
+          },
+          "final": {
+            "source_detection_failed": 0,
+            "swap_detection_failed": 0,
+            "swap_not_attempted_after_source_failure": 0,
+            "missing_or_invalid_detection_flags": 0,
+            "either_detection_not_successful": 0
+          }
+        },
+        "invalid_scores_by_method": {
+          "clean": 0,
+          "stage1": 0,
+          "final": 0
+        },
+        "invalid_methods_by_method": {
+          "clean": 0,
+          "stage1": 0,
+          "final": 0
+        },
+        "baseline_sanity_checks": {
+          "available_pairs": 3,
+          "passed": 3,
+          "failed": 0,
+          "unavailable": 0
+        },
+        "excluded_pair_details": [],
+        "limitations": [
+          "Lower FaceNet cosine means the swap is less similar to the CLEAN source identity. It is a relative identity-copying metric, not a calibrated success probability.",
+          "Primary numerical comparisons require a complete paired triple, successful source/output face detection, finite scores, and a clean-swap cosine at or above the configured minimum baseline. All unfiltered numerical values and images remain available.",
+          "The default 0.80 baseline quality gate is a user-requested heuristic, not a validated universal FaceNet identity threshold or a probability. Passing it only qualifies a pair for exploratory numerical comparison; manual baseline inspection is still required before any protection conclusion.",
+          "The primary aggregate delta averages target-level differences within each source, then gives each source equal weight. Pair-level means and counts are descriptive; repeated targets are not independent source identities.",
+          "FaceNet was used for cloak selection, so it is not an entirely unseen evaluator. SimSwap was an optimization branch of PhantomSeal, so this is not an unseen-swapper transfer test.",
+          "One swapper and a small public sample cannot establish general protection, robustness to image processing, or protection against other tools. No p-values or thresholded attack-success rates are reported.",
+          "A negative final-minus-PhantomSeal delta favors the chain for this metric; a positive delta favors PhantomSeal alone. Detection failures are separate outcomes, not invented zero similarity scores.",
+          "PNG and JPEG95 conditions are reported separately because processing can reverse their ordering. All similarities should use the original clean PNG identity reference; the clean swap baseline itself uses the same processing condition as the protected sources.",
+          "The additional source-versus-target baseline sanity check is reported separately. The configured clean-source quality gate controls primary numerical inclusion; neither check substitutes for visually confirming a recognizable clean swap.",
+          "This evaluates protected photos in the source-identity role: the attacker extracts their identity for insertion into another face. It does not test preventing replacement of the protected photo's face when that photo is the destination.",
+          "PhantomSeal alone and the chain are compared at their current product settings, not at matched perturbation budgets. Any additional protection may come with greater image distortion; this is not a matched-budget ablation."
+        ]
+      }
+    }
+  },
+  "limitations": [],
+  "metadata": {
+    "protected_role": "source_identity",
+    "heldout_note": "Supplementary geometry test of one previously protected portrait at 1280x1280. The public original was upscaled from 512x512 for the earlier application smoke test; this is not a new native high-resolution identity or an independent population sample.",
+    "correction_note": "Reanalysed on 20 October 2026 after identifying weak unprotected swaps. The previous unfiltered 28/36 ranking in the six-source suite does not establish protection efficacy and is withdrawn. The configurable 0.80 clean-swap cosine is a heuristic quality gate, not 80% confidence or a calibrated identity threshold. Only numerically qualified complete triples enter primary descriptive comparisons; manual baseline likeness inspection is still required. No raw source, swap, measurement or protection parameter was changed."
+  },
+  "pair_reports": [
+    {
+      "source_id": "portrait1280",
+      "target_id": "cage",
+      "condition": "png",
+      "rows": {
+        "clean": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8555985689163208,
+          "facenet_cosine_to_target": 0.3101109564304352
+        },
+        "stage1": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8346816301345825,
+          "facenet_cosine_to_target": 0.31221461296081543
+        },
+        "final": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.854588508605957,
+          "facenet_cosine_to_target": 0.3575834333896637
+        }
+      },
+      "final_vs_stage1": {
+        "final_minus_stage1_cosine": 0.01990687847137451,
+        "raw_final_minus_stage1_cosine": 0.01990687847137451,
+        "direction": "higher_clean_identity_similarity",
+        "baseline_status": "numeric_gate_met_visual_review_required",
+        "baseline_cosine": 0.8555985689163208,
+        "minimum_baseline_cosine": 0.8,
+        "both_swap_faces_detected": true,
+        "interpretation": "The configurable baseline cutoff is a quality gate, not confidence or a calibrated verification threshold. If the unprotected swap is below it, no defense comparison is inferred. Even above it, inspect whether the unprotected swap actually resembles the source. For a usable baseline, a positive difference means the final swap resembles the clean source more according to FaceNet for this pair. It may indicate weaker identity protection for this example. Detection changes and a single pair do not establish general efficacy."
+      }
+    },
+    {
+      "source_id": "portrait1280",
+      "target_id": "wlh",
+      "condition": "png",
+      "rows": {
+        "clean": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8071813583374023,
+          "facenet_cosine_to_target": 0.004236072301864624
+        },
+        "stage1": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8081709146499634,
+          "facenet_cosine_to_target": 0.01829363778233528
+        },
+        "final": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8215397000312805,
+          "facenet_cosine_to_target": 0.05555129423737526
+        }
+      },
+      "final_vs_stage1": {
+        "final_minus_stage1_cosine": 0.013368785381317139,
+        "raw_final_minus_stage1_cosine": 0.013368785381317139,
+        "direction": "higher_clean_identity_similarity",
+        "baseline_status": "numeric_gate_met_visual_review_required",
+        "baseline_cosine": 0.8071813583374023,
+        "minimum_baseline_cosine": 0.8,
+        "both_swap_faces_detected": true,
+        "interpretation": "The configurable baseline cutoff is a quality gate, not confidence or a calibrated verification threshold. If the unprotected swap is below it, no defense comparison is inferred. Even above it, inspect whether the unprotected swap actually resembles the source. For a usable baseline, a positive difference means the final swap resembles the clean source more according to FaceNet for this pair. It may indicate weaker identity protection for this example. Detection changes and a single pair do not establish general efficacy."
+      }
+    },
+    {
+      "source_id": "portrait1280",
+      "target_id": "zxy",
+      "condition": "png",
+      "rows": {
+        "clean": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.805351734161377,
+          "facenet_cosine_to_target": -0.03768862783908844
+        },
+        "stage1": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.780417799949646,
+          "facenet_cosine_to_target": -0.02329140342772007
+        },
+        "final": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.7761694192886353,
+          "facenet_cosine_to_target": -0.03323753550648689
+        }
+      },
+      "final_vs_stage1": {
+        "final_minus_stage1_cosine": -0.004248380661010742,
+        "raw_final_minus_stage1_cosine": -0.004248380661010742,
+        "direction": "lower_clean_identity_similarity",
+        "baseline_status": "numeric_gate_met_visual_review_required",
+        "baseline_cosine": 0.805351734161377,
+        "minimum_baseline_cosine": 0.8,
+        "both_swap_faces_detected": true,
+        "interpretation": "The configurable baseline cutoff is a quality gate, not confidence or a calibrated verification threshold. If the unprotected swap is below it, no defense comparison is inferred. Even above it, inspect whether the unprotected swap actually resembles the source. For a usable baseline, a positive difference means the final swap resembles the clean source more according to FaceNet for this pair. It may indicate weaker identity protection for this example. Detection changes and a single pair do not establish general efficacy."
+      }
+    },
+    {
+      "source_id": "portrait1280",
+      "target_id": "cage",
+      "condition": "jpeg95",
+      "rows": {
+        "clean": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.856037974357605,
+          "facenet_cosine_to_target": 0.308782160282135
+        },
+        "stage1": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8390496969223022,
+          "facenet_cosine_to_target": 0.32127100229263306
+        },
+        "final": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8520039319992065,
+          "facenet_cosine_to_target": 0.36318230628967285
+        }
+      },
+      "final_vs_stage1": {
+        "final_minus_stage1_cosine": 0.012954235076904297,
+        "raw_final_minus_stage1_cosine": 0.012954235076904297,
+        "direction": "higher_clean_identity_similarity",
+        "baseline_status": "numeric_gate_met_visual_review_required",
+        "baseline_cosine": 0.856037974357605,
+        "minimum_baseline_cosine": 0.8,
+        "both_swap_faces_detected": true,
+        "interpretation": "The configurable baseline cutoff is a quality gate, not confidence or a calibrated verification threshold. If the unprotected swap is below it, no defense comparison is inferred. Even above it, inspect whether the unprotected swap actually resembles the source. For a usable baseline, a positive difference means the final swap resembles the clean source more according to FaceNet for this pair. It may indicate weaker identity protection for this example. Detection changes and a single pair do not establish general efficacy."
+      }
+    },
+    {
+      "source_id": "portrait1280",
+      "target_id": "wlh",
+      "condition": "jpeg95",
+      "rows": {
+        "clean": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8120023012161255,
+          "facenet_cosine_to_target": -0.0013591395691037178
+        },
+        "stage1": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8097072839736938,
+          "facenet_cosine_to_target": 0.013086682185530663
+        },
+        "final": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8295658230781555,
+          "facenet_cosine_to_target": 0.034949351102113724
+        }
+      },
+      "final_vs_stage1": {
+        "final_minus_stage1_cosine": 0.01985853910446167,
+        "raw_final_minus_stage1_cosine": 0.01985853910446167,
+        "direction": "higher_clean_identity_similarity",
+        "baseline_status": "numeric_gate_met_visual_review_required",
+        "baseline_cosine": 0.8120023012161255,
+        "minimum_baseline_cosine": 0.8,
+        "both_swap_faces_detected": true,
+        "interpretation": "The configurable baseline cutoff is a quality gate, not confidence or a calibrated verification threshold. If the unprotected swap is below it, no defense comparison is inferred. Even above it, inspect whether the unprotected swap actually resembles the source. For a usable baseline, a positive difference means the final swap resembles the clean source more according to FaceNet for this pair. It may indicate weaker identity protection for this example. Detection changes and a single pair do not establish general efficacy."
+      }
+    },
+    {
+      "source_id": "portrait1280",
+      "target_id": "zxy",
+      "condition": "jpeg95",
+      "rows": {
+        "clean": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.8044350743293762,
+          "facenet_cosine_to_target": -0.03782164305448532
+        },
+        "stage1": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.7794872522354126,
+          "facenet_cosine_to_target": -0.02093946747481823
+        },
+        "final": {
+          "source_face_detected": true,
+          "swap_face_detected": true,
+          "facenet_cosine_to_clean_source": 0.7729579210281372,
+          "facenet_cosine_to_target": -0.029004497453570366
+        }
+      },
+      "final_vs_stage1": {
+        "final_minus_stage1_cosine": -0.006529331207275391,
+        "raw_final_minus_stage1_cosine": -0.006529331207275391,
+        "direction": "lower_clean_identity_similarity",
+        "baseline_status": "numeric_gate_met_visual_review_required",
+        "baseline_cosine": 0.8044350743293762,
+        "minimum_baseline_cosine": 0.8,
+        "both_swap_faces_detected": true,
+        "interpretation": "The configurable baseline cutoff is a quality gate, not confidence or a calibrated verification threshold. If the unprotected swap is below it, no defense comparison is inferred. Even above it, inspect whether the unprotected swap actually resembles the source. For a usable baseline, a positive difference means the final swap resembles the clean source more according to FaceNet for this pair. It may indicate weaker identity protection for this example. Detection changes and a single pair do not establish general efficacy."
+      }
+    }
+  ]
+}

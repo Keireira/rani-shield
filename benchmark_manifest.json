@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "description": "Six distinct public demonstration portraits, three fixed SimSwap target crops; no private user photographs.",
+  "sources": [
+    {"id": "portrait", "path": "data/test/image.png"},
+    {"id": "trump", "path": "data/phantomseal_cloaks/trump.jpg"},
+    {"id": "james", "path": "data/phantomseal_cloaks/james.jpg"},
+    {"id": "dnl", "path": "data/phantomseal_cloaks/dnl.jpg"},
+    {"id": "gy", "path": "data/phantomseal_cloaks/gy.jpg"},
+    {"id": "source1", "path": "data/phantomseal_cloaks/1_source.jpg"}
+  ],
+  "targets": [
+    {"id": "cage", "path": "data/phantomseal_cloaks/cage.jpg"},
+    {"id": "wlh", "path": "data/phantomseal_cloaks/wlh.jpg"},
+    {"id": "zxy", "path": "data/phantomseal_cloaks/zxy.jpg"}
+  ],
+  "conditions": ["png", "jpeg95"],
+  "params": {"max_size": 1280, "phantom_iterations": 1000, "iterations": 30, "noise_clamp": 12, "step_size": 1.0},
+  "input_exclusions": [{"id": "lcw", "path": "data/phantomseal_cloaks/lcw.jpg", "reason": "The application's MTCNN detected no face before swap evaluation. Replaced by gy.jpg after face-detection preflight; no swap score was used for this choice."}],
+  "provenance": "Sample source data/test/image.png is supplied by FaceShield. Other portraits are SimSwap public crop_224 examples; see data/phantomseal_cloaks/PROVENANCE.json. The full PhantomSeal VGGFace2 bank is separate."
+}

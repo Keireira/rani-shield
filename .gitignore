@@ -1,0 +1,39 @@
+# Local runtime, uploads, generated images and machine-specific state
+.venv/
+venv/
+.cache/
+results/
+__pycache__/
+*.py[cod]
+*.log
+*.part
+*.tmp
+.env
+.env.*
+!.env.example
+
+# Downloaded checkpoints and model archives stay outside Git history
+weights/**
+!weights/README.md
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.bin
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Tool output
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+.DS_Store
+Thumbs.db

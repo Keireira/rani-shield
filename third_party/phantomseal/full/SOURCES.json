@@ -1,0 +1,31 @@
+{
+  "iresnet": {
+    "url": "https://raw.githubusercontent.com/deepinsight/insightface/master/recognition/arcface_torch/backbones/iresnet.py",
+    "sha256": "fb57d145c4c26d8e55680c24fa164541a7222ccdefa3a1716c054ff4c5859753"
+  },
+  "deep3d": {
+    "url": "https://raw.githubusercontent.com/sicxu/Deep3DFaceRecon_pytorch/master/models/networks.py",
+    "sha256": "e6c768098a524e0f775483e89bbed414ac776c74b84bd5ab08cfaa0ca2e22128"
+  },
+  "faceshifter": {
+    "url": "https://github.com/richarduuz/Research_Project/blob/d970296cf9d9fe059d729444c757334c9e13a798/ModelC/face_modules/model.py",
+    "sha256": "9fd7e1041851d0b83468032e2694aac2acab9973dca6b6d8f4fbb67d7df7c72f",
+    "changes": "Only recognition classes retained; Flatten.view changed to reshape for noncontiguous inputs."
+  },
+  "LICENSE.deep3d.txt": {
+    "url": "https://raw.githubusercontent.com/sicxu/Deep3DFaceRecon_pytorch/master/LICENSE",
+    "sha256": "bb3771fb0c09219af62e46cb9e349abc24b2b5cc73d812a1c46d1489b9bedd3c"
+  },
+  "LICENSE.insightface_pytorch.txt": {
+    "url": "https://raw.githubusercontent.com/TreB1eN/InsightFace_Pytorch/master/LICENSE",
+    "sha256": "dafd2245fa1467a29b0c8395a02e06277bfed23097119e6a3fbeeaa438f8adb0"
+  },
+  "insightface_license_readme": {
+    "url": "https://raw.githubusercontent.com/deepinsight/insightface/master/README.md",
+    "sha256": "1846967d19f2b19845b967e14715c162881e7598360e23ab6646a47c88667758"
+  },
+  "torchvision_license": {
+    "url": "https://raw.githubusercontent.com/pytorch/vision/main/LICENSE",
+    "sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d"
+  }
+}

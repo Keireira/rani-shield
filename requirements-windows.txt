@@ -1,0 +1,17 @@
+# Install CUDA PyTorch first (see WINDOWS.md).
+torch==2.7.1
+torchvision==0.22.1
+transformers==4.46.3
+diffusers==0.31.0
+accelerate==1.0.1
+numpy==1.26.4
+opencv-python==4.10.0.84
+omegaconf==2.3.0
+einops>=0.8,<0.9
+scipy>=1.10
+fastapi==0.150.0
+uvicorn==0.54.0
+httpx==0.28.1
+torch-mtcnn==0.0.7
+
+facenet-pytorch==2.5.3

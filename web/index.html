@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>FaceShield</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body data-busy="false">
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m-4-4 4 4 4-4M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5"/></symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5m0 3h.01"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.4 3 7.6 7.5 9.5 4.5-1.9 7.5-5.1 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.3 2.3 4.7-4.8"/></symbol>
+    </defs>
+  </svg>
+  <input id="file-input" type="file" accept="image/*" hidden>
+  <main class="app-shell">
+    <section class="editor" aria-label="Photo editor">
+      <section class="viewer-panel" id="drop-zone" aria-label="Image viewer. Drop a photo here">
+        <div id="canvas-viewport" class="canvas-viewport">
+          <canvas id="comparison-canvas" aria-label="Photo comparison"></canvas>
+          <div class="empty-state" id="empty-state">
+            <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+            <strong>Open a photo</strong><p>Drop a file here or use Open image.</p><span>PNG, JPG, WEBP · processed as RGB</span>
+          </div>
+          <span id="before-label" class="canvas-label before-label" hidden>Original</span>
+          <span id="after-label" class="canvas-label after-label" hidden>Protected</span>
+          <div id="divider" class="comparison-divider" hidden>
+            <button id="divider-handle" class="divider-handle" type="button" role="slider" tabindex="0" aria-label="Comparison divider position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4m8-8 4 4-4 4"/></svg>
+            </button>
+          </div>
+          <div class="drop-overlay"><strong>Drop to open photo</strong></div>
+        </div>
+        <div class="viewer-toolbar">
+          <button id="upload-button" class="open-image-button" type="button" title="Open image (Ctrl+O)"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg><span>Open image</span></button>
+          <div class="mode-tabs" role="group" aria-label="View mode">
+            <button class="mode-button active" type="button" data-mode="original">Original</button>
+            <button class="mode-button" type="button" data-mode="split" title="Compare with a draggable divider">Slider</button>
+            <button class="mode-button" type="button" data-mode="side" title="Show both photos side by side">Side by side</button>
+            <button class="mode-button" type="button" data-mode="result">Result</button>
+            <button class="mode-button" type="button" data-mode="diff" title="Inspect pixel differences">Diff</button>
+          </div>
+          <div class="bottom-inspector"><div class="metrics" aria-label="Image similarity">
+            <span title="Structural similarity. Closer to 1 means more similar.">SSIM <strong id="metric-ssim">—</strong></span>
+            <span title="Peak signal-to-noise ratio. Higher means less error.">PSNR <strong id="metric-psnr">—</strong></span>
+            <span title="Percentage of pixels that changed.">Changed <strong id="metric-changed">—</strong></span>
+          </div></div>
+          <div class="viewer-tools">
+            <div class="zoom-controls" aria-label="Photo zoom">
+              <button id="zoom-out" class="icon-button" type="button" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+              <span id="zoom-label">100%</span>
+              <button id="zoom-in" class="icon-button" type="button" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+            </div>
+            <button id="fit-button" class="icon-button fit-button" type="button" title="Fit to view (F)" aria-label="Fit to view"><svg class="icon"><use href="#i-fit"/></svg></button>
+          </div>
+          <button id="settings-button" class="settings-button" type="button">Settings</button>
+          <button id="help-button" class="icon-button" type="button" title="Help" aria-label="Help"><svg class="icon"><use href="#i-help"/></svg></button>
+        </div>
+      </section>
+    </section>
+    <aside class="settings-panel" aria-label="Protection settings">
+      <div class="settings-scroll">
+        <section id="diff-controls" class="control-section" hidden>
+          <div class="card-header"><h2>Difference map</h2></div>
+          <div class="range-control"><div class="control-label"><label for="diff-gain">Gain</label><output id="diff-gain-value" for="diff-gain">×8</output></div><input id="diff-gain" type="range" min="1" max="32" step="1" value="8" title="Amplify differences for visibility. 1 shows actual differences."></div>
+          <label class="field-label" for="diff-channel">Channels</label><select id="diff-channel"><option value="rgb">RGB · all channels</option><option value="red">Red</option><option value="green">Green</option><option value="blue">Blue</option></select>
+        </section>
+        <form id="settings-form">
+          <section class="control-section">
+            <div class="card-header"><h1 class="brand"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>FaceShield</h1><button id="reset-button" class="icon-button" type="button" title="Reset protection settings" aria-label="Reset protection settings"><svg class="icon"><use href="#i-reset"/></svg></button></div>
+            <p class="card-description">Choose one method or run both in sequence.</p>
+            <label class="field-label" for="method-select">Protection method</label>
+            <select id="method-select" aria-describedby="method-readiness"><option value="phantomseal_faceshield">PhantomSeal → FaceShield</option><option value="phantomseal">PhantomSeal only</option><option value="faceshield">FaceShield only</option></select>
+            <p id="method-readiness" class="method-readiness" role="status" aria-live="polite">Checking methods…</p>
+            <div class="range-control" data-engine="phantomseal"><div class="control-label"><label for="phantom-iterations">PhantomSeal steps</label><output id="phantom-iterations-value" for="phantom-iterations">1000</output></div><input id="phantom-iterations" type="range" min="10" max="2000" step="1" value="1000" title="PhantomSeal optimization steps. More steps take longer."></div>
+            <div class="range-control" data-engine="faceshield"><div class="control-label"><label for="iterations">FaceShield steps</label><output id="iterations-value" for="iterations">30</output></div><input id="iterations" type="range" min="10" max="100" step="1" value="30" title="Optimization steps. More steps take longer."></div>
+            <div class="range-control" data-engine="faceshield"><div class="control-label"><label for="noise-clamp">FaceShield noise limit</label><output id="noise-clamp-value" for="noise-clamp">12</output></div><input id="noise-clamp" type="range" min="1" max="32" step="1" value="12" title="Maximum color-value change from the FaceShield stage alone, out of 255. In a combined run, changes from both methods accumulate."></div>
+            <div class="range-control" data-engine="faceshield"><div class="control-label"><label for="step-size">FaceShield step size</label><output id="step-size-value" for="step-size">1.00</output></div><input id="step-size" type="range" min="0.25" max="4" step="0.25" value="1" title="How far each optimization step can change the photo."></div>
+          </section>
+          <section class="control-section">
+            <div class="card-header"><h2>Output</h2><span class="format-badge">PNG</span></div>
+            <div class="range-control"><div class="control-label"><label for="max-size">Maximum long edge</label><output id="max-size-value" for="max-size">1280 px</output></div><input id="max-size" type="range" min="128" max="1280" step="1" value="1280" title="Maximum output dimension. Keeps proportions and does not enlarge smaller photos."></div>
+            <p class="control-note">Keeps proportions. Smaller photos are not enlarged.</p>
+          </section>
+        </form>
+        <p class="chain-note" id="chain-note">Experimental combination. Changes from both methods accumulate; the FaceShield noise limit applies only to its own stage.</p>
+        <p class="protection-note">Keep the protected PNG. Compression, resizing and editing can weaken protection. Results vary between face-swap models.</p>
+      </div>
+      <div class="process-panel">
+        <div id="processing-feedback" hidden><div class="processing-status" role="status" aria-live="polite"><span id="live-status"></span><span id="progress-label"></span></div><progress id="progress-bar" max="100" value="0" aria-label="Protection progress"></progress></div>
+        <p id="result-summary" class="result-summary" role="status" hidden></p>
+        <div class="process-actions"><button id="process-button" class="button button-primary" type="button" disabled><span id="process-label">Protect photo</span></button><button id="export-button" class="button" type="button" disabled title="Export the selected photo or difference map as PNG"><svg class="icon"><use href="#i-download"/></svg>Export PNG</button></div>
+        <button id="export-stage1-button" class="button stage-export" type="button" hidden disabled>Export PhantomSeal PNG</button>
+        <button id="test-protection-button" class="button test-protection-button" type="button" disabled>Test protection</button>
+      </div>
+    </aside>
+  </main>
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+  <dialog id="test-dialog" class="test-dialog" aria-labelledby="test-title">
+    <div class="dialog-heading"><h2 id="test-title">Test protection</h2><button id="close-test" class="icon-button" type="button" aria-label="Close test"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="test-dialog-content">
+      <p class="test-intro">First check whether SimSwap can copy your identity from the unprotected photo. A weak or visually incorrect baseline makes this protection comparison inconclusive.</p>
+      <div class="test-controls">
+        <label class="runtime-control" for="test-target"><span>Target face</span><select id="test-target"><option value="cage">Demo face 1</option><option value="wlh">Demo face 2</option><option value="zxy">Demo face 3</option></select></label>
+        <label class="test-checkbox"><input id="test-jpeg95" type="checkbox" checked><span>Also test JPEG95</span></label>
+        <button id="run-test-button" class="button button-primary" type="button" disabled>Run SimSwap test</button>
+      </div>
+      <div class="test-quality-setting">
+        <label class="runtime-control" for="test-baseline-cutoff"><span>Minimum unprotected-swap cosine · quality gate</span><input id="test-baseline-cutoff" type="number" min="0" max="1" step="0.01" value="0.80" inputmode="decimal" aria-describedby="test-baseline-explanation"></label>
+        <p id="test-baseline-explanation" class="test-limit-note">This adjustable cutoff is a quality gate, not a confidence percentage. A cutoff of 0.80 does not mean 80% confidence. You must also confirm the unprotected swap looks like you.</p>
+      </div>
+      <p id="test-readiness" class="test-readiness" role="status" aria-live="polite">Checking test availability…</p>
+      <div id="test-feedback" hidden><div class="processing-status" role="status" aria-live="polite"><span id="test-status"></span><span id="test-progress-label"></span></div><progress id="test-progress" max="100" value="0" aria-label="Test progress"></progress><p class="control-note">You can close this window while the test continues.</p></div>
+      <p id="test-error" class="test-error" role="alert" hidden></p>
+      <div id="test-results" class="test-results" aria-live="polite" hidden></div>
+    </div>
+    <div class="dialog-actions"><button id="dismiss-test" class="button" type="button">Close</button></div>
+  </dialog>
+  <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+    <div class="dialog-heading"><h2 id="settings-title">Settings</h2><button id="close-settings" class="icon-button" type="button" title="Close without applying" aria-label="Close settings"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="settings-dialog-content">
+      <section class="preset-controls" aria-label="Presets">
+        <label class="runtime-control" for="preset-select"><span>Preset</span><select id="preset-select"><option value="">Custom</option></select></label>
+        <label class="runtime-control" for="preset-name"><span>Preset name</span><input id="preset-name" type="text" maxlength="80" autocomplete="off" placeholder="Enter a name"></label>
+        <div class="preset-actions"><button id="save-preset" class="button" type="button">Save preset</button><button id="delete-preset" class="button" type="button" disabled>Delete</button></div>
+        <p class="control-note">Presets are saved in this browser. Choose one, then Save settings to apply it.</p>
+      </section>
+      <section class="dialog-parameters" aria-label="Protection parameters">
+        <label class="runtime-control" for="dialog-method-select"><span>Protection method</span><select id="dialog-method-select"><option value="phantomseal_faceshield">PhantomSeal → FaceShield</option><option value="phantomseal">PhantomSeal only</option><option value="faceshield">FaceShield only</option></select></label>
+        <p id="dialog-method-readiness" class="method-readiness" role="status" aria-live="polite"></p>
+        <label class="runtime-control" for="dialog-phantom-iterations" data-engine="phantomseal"><span>PhantomSeal steps</span><input id="dialog-phantom-iterations" type="number" min="10" max="2000" step="1" value="1000"></label>
+        <label class="runtime-control" for="dialog-iterations" data-engine="faceshield"><span>FaceShield steps</span><input id="dialog-iterations" type="number" min="10" max="100" step="1" value="30"></label>
+        <label class="runtime-control" for="dialog-noise-clamp" data-engine="faceshield"><span>FaceShield noise limit</span><input id="dialog-noise-clamp" type="number" min="1" max="32" step="1" value="12"></label>
+        <label class="runtime-control" for="dialog-step-size" data-engine="faceshield"><span>FaceShield step size</span><input id="dialog-step-size" type="number" min="0.25" max="4" step="0.25" value="1"></label>
+        <label class="runtime-control" for="dialog-max-size"><span>Maximum long edge (px)</span><input id="dialog-max-size" type="number" min="128" max="1280" step="1" value="1280"></label>
+      </section>
+      <p id="settings-message" class="settings-message" role="status" aria-live="polite" hidden></p>
+    </div>
+    <div class="dialog-actions"><button id="cancel-settings" class="button" type="button">Cancel</button><button id="save-settings" class="button button-primary" type="button">Save settings</button></div>
+  </dialog>
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
+    <div class="dialog-heading"><h2 id="help-title">Help</h2><button id="close-help" class="icon-button" type="button" aria-label="Close help"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <dl>
+      <dt>Open and protect</dt><dd>Drop a photo or choose Open image. Set the parameters and click Protect photo. The first run takes longer while models load. Photos are processed locally as RGB.</dd>
+      <dt>Protection methods</dt><dd>PhantomSeal → FaceShield runs PhantomSeal first and applies FaceShield to that result. The combination is experimental and does not guarantee stronger protection. Its changes accumulate; the FaceShield noise limit bounds only the second stage. PhantomSeal steps and FaceShield controls apply only when their method is selected. Old presets without a method keep their original FaceShield-only behavior.</dd>
+      <dt>Compare</dt><dd>Original and Result show a single photo. Slider uses a draggable divider. Side by side shows both. If output is resized, Original shows the matching resized source for a fair comparison. New runs still use your full original upload.</dd>
+      <dt>Zoom and pan</dt><dd>Scroll to zoom. Drag to pan. In Slider mode, drag the divider; hold Space or Shift while dragging to pan. Fit to view or double-click resets the view. Use arrow keys when the divider is focused.</dd>
+      <dt>Difference map</dt><dd>Diff shows absolute pixel changes. Black means identical. Gain amplifies changes; RGB shows color differences and individual channels are shown in grayscale. SSIM, PSNR and Changed describe image similarity, not protection strength.</dd>
+      <dt>Settings and presets</dt><dd>Settings lets you edit protection parameters and save named presets in this browser. Save settings applies your draft. Cancel, Escape or closing the dialog discards it. Reset restores the recommended defaults.</dd>
+      <dt>Export</dt><dd>Export PNG saves the selected photo, or the full-resolution difference map in Diff mode. The exported file keeps the current channel and gain settings. In a combined run, Export PhantomSeal PNG saves the intermediate first stage; the main Result and comparison always show the final output against the clean original.</dd>
+      <dt>Test protection</dt><dd>After protecting a photo, Test protection compares real SimSwap outputs for the clean source and available protected stages. First compare the Unprotected swap with Your clean original. Each PNG/JPEG95 baseline must reach the adjustable numeric quality cutoff and receive your visual confirmation before any comparative delta is shown. A score of 0.80 is not 80% confidence, and accepting the baseline is not a successful-defense verdict. Weak baselines are inconclusive; their raw scores and images remain visible. FaceNet and SimSwap also participate in PhantomSeal, so this is a diagnostic comparison, not proof of general protection. The test uses the photo as an identity source and does not evaluate replacing the face inside that photo. Closing the test window keeps the job running; changing the photo, result, test job or cutoff clears visual confirmations.</dd>
+      <dt>Protection limits</dt><dd>These methods add changes intended to make some face-swap methods less effective. They do not guarantee protection against every model. JPEG, resizing and editing can weaken the effect. Keep the protected PNG.</dd>
+      <dt>License</dt><dd>Research version: non-commercial academic, educational and research use only. Commercial use requires permission under the original KUAICV Research-Only License.</dd>
+    </dl>
+  </dialog>
+</body>
+</html>

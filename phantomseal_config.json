@@ -1,0 +1,5 @@
+{
+  "checkpoint_dir": "weights",
+  "cloak_dir": "weights/phantomseal/cloaks/mix_full",
+  "expected_cloaks": 214
+}

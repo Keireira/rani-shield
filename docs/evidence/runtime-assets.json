@@ -1,0 +1,1435 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-20",
+  "description": "Observed local asset inventory, not independently publisher-signed hashes. Original component/model/data terms apply.",
+  "total_bytes": 7162009453,
+  "configuration": {
+    "checkpoint_dir": ".cache/phantomseal-downloads/checkpoints",
+    "cloak_dir": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full",
+    "expected_cloaks": 214
+  },
+  "assets": [
+    {
+      "path": "models/arcface50_checkpoint.tar",
+      "role": "runtime",
+      "bytes": 209280521,
+      "sha256": "52ea5ce4902017b77a2bb811dd9a82f57dee3883e06c18a42d288437263c7a20"
+    },
+    {
+      "path": "models/arcface100_checkpoint.tar",
+      "role": "runtime",
+      "bytes": 209280521,
+      "sha256": "52ea5ce4902017b77a2bb811dd9a82f57dee3883e06c18a42d288437263c7a20"
+    },
+    {
+      "path": "models/phantomseal/latest_net_G.pth",
+      "role": "runtime",
+      "bytes": 220243703,
+      "sha256": "24caf144e9aabd5acd1127b06f13ed3528240adb9e747d77a94ac3f33e672330"
+    },
+    {
+      "path": "models/phantomseal/arcface_checkpoint.tar",
+      "role": "runtime",
+      "bytes": 209280521,
+      "sha256": "52ea5ce4902017b77a2bb811dd9a82f57dee3883e06c18a42d288437263c7a20"
+    },
+    {
+      "path": "models/phantomseal/facenet_vggface2.pt",
+      "role": "runtime",
+      "bytes": 111898327,
+      "sha256": "281cebca8662831adb987a874bdcb36e73f5b1c6dc5ee5878f305e985625d99b"
+    },
+    {
+      "path": "models/phantomseal/manifest.json",
+      "role": "runtime",
+      "bytes": 10331,
+      "sha256": "40c7890a0e4775985c2fa651bce6e4610d88f0372a368f03ea33aca5d1c39324"
+    },
+    {
+      "path": "utils/unet/ip_adapter/ip-adapter_sd15.bin",
+      "role": "runtime",
+      "bytes": 44642825,
+      "sha256": "68e1df30d760f280e578c302f1e73b37ea08654eff16a31153588047affe0058"
+    },
+    {
+      "path": ".cache/models/sd15/tokenizer/vocab.json",
+      "role": "runtime",
+      "bytes": 1059962,
+      "sha256": "e089ad92ba36837a0d31433e555c8f45fe601ab5c221d4f607ded32d9f7a4349"
+    },
+    {
+      "path": ".cache/models/sd15/tokenizer/merges.txt",
+      "role": "runtime",
+      "bytes": 524619,
+      "sha256": "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a"
+    },
+    {
+      "path": ".cache/models/sd15/tokenizer/tokenizer_config.json",
+      "role": "runtime",
+      "bytes": 806,
+      "sha256": "00439066fcba73de57644cf41e4e3b9f2dbb09d7f3fc2005898ba52399045882"
+    },
+    {
+      "path": ".cache/models/sd15/tokenizer/special_tokens_map.json",
+      "role": "runtime",
+      "bytes": 472,
+      "sha256": "c4864a9376a8401918425bed71fc14fc0e81f9b59ec45c1cf96cccb2df508eac"
+    },
+    {
+      "path": ".cache/models/sd15/text_encoder/config.json",
+      "role": "runtime",
+      "bytes": 617,
+      "sha256": "845df614cb9327ae7bbea027316246fae917827407da6df13572e41b5f93b4cc"
+    },
+    {
+      "path": ".cache/models/sd15/text_encoder/model.fp16.safetensors",
+      "role": "runtime",
+      "bytes": 246144864,
+      "sha256": "77795e2023adcf39bc29a884661950380bd093cf0750a966d473d1718dc9ef4e"
+    },
+    {
+      "path": ".cache/models/sd15/vae/config.json",
+      "role": "runtime",
+      "bytes": 547,
+      "sha256": "786a7d21647ddea6a04b9675c03d3cb45e90a2f3c6da5fbda2c54ade040036de"
+    },
+    {
+      "path": ".cache/models/sd15/vae/diffusion_pytorch_model.fp16.safetensors",
+      "role": "runtime",
+      "bytes": 167335342,
+      "sha256": "4fbcf0ebe55a0984f5a5e00d8c4521d52359af7229bb4d81890039d2aa16dd7c"
+    },
+    {
+      "path": ".cache/models/sd15/unet/config.json",
+      "role": "runtime",
+      "bytes": 743,
+      "sha256": "78f474de6bab3d893868f37be97b636ae65c0df3073ed3256ca458ff599b5f96"
+    },
+    {
+      "path": ".cache/models/sd15/unet/diffusion_pytorch_model.fp16.safetensors",
+      "role": "runtime",
+      "bytes": 1719125304,
+      "sha256": "c83908253f9a64d08c25fc90874c9c8aef9a329ce1ca5fb909d73b0c83d1ea21"
+    },
+    {
+      "path": ".cache/models/ip-adapter/models/image_encoder/config.json",
+      "role": "runtime",
+      "bytes": 560,
+      "sha256": "625d37b31afbf2f0792a87846b3654ee23f20568409e35b78a1f795b04e1a7a1"
+    },
+    {
+      "path": ".cache/models/ip-adapter/models/image_encoder/model.safetensors",
+      "role": "runtime",
+      "bytes": 2528373448,
+      "sha256": "6ca9667da1ca9e0b0f75e46bb030f7e011f44f86cbfb8d5a36590fcd7507b030"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/checkpoints/simswap/arcface_checkpoint.tar",
+      "role": "ensemble_simswap",
+      "bytes": 209280521,
+      "sha256": "52ea5ce4902017b77a2bb811dd9a82f57dee3883e06c18a42d288437263c7a20"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/checkpoints/faceshifter/model_ir_se50.pth",
+      "role": "ensemble_faceshifter",
+      "bytes": 175367323,
+      "sha256": "a035c768259b98ab1ce0e646312f48b9e1e218197a0f80ac6765e88f8b6ddf28"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/checkpoints/hififace/hififace_opensource_299999.ckpt",
+      "role": "ensemble_hififace_id_and_3d",
+      "bytes": 1038016161,
+      "sha256": "d746db2a10f898304d557ec1ae256f66fbb986701768d62f01da5567ce7491ee"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000004_0027_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94357,
+      "sha256": "dce763a3ae426a759f90ece2f919d168698bc717cd66e6307b37aacaaf41f58b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000006_0064_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 93363,
+      "sha256": "9fe41489449c446df7a6569c426f586d38875c98dd4cee4795b0a488996d107f"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000007_0069_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 83702,
+      "sha256": "59ee52c453311a75d0c71c574c705920d900fba2c9e8818ee85dade93020b695"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000008_0030_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 93921,
+      "sha256": "f4975ac2d6fbb9bbec77959b1c26d51e94f4f4ef39c36c1d7e392537d6a2941b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000011_0035_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94254,
+      "sha256": "a25cb5683e6fd2b418ab8adf3901a41d5c6d81ff658a4d92bbc7178f5fa49568"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000016_0217_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 76061,
+      "sha256": "843908fd7b038a93e5465323fc0b190e246ba64f518ab9f4e18a4e88e7a63f5e"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000019_0031_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86200,
+      "sha256": "77b8bfc720461a75abbfacb61e0b50b404e4d307a6f0c8faafb83c7c9e90b3a4"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000021_0100_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88450,
+      "sha256": "e74a749b2c1b9d94e5c05d31a8b915afeb3494d71ee09100d6f3aee5114e0a98"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000042_0001_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 120947,
+      "sha256": "fe18963229ddc14c415df1bb2325ca30f0aebe6c8bb5beb495fe4b7ac9602551"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000043_0014_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 76342,
+      "sha256": "1e120d23f1e4b758672ebccd62e88db5c652cfc34a1d6d84314983302af6d63a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000046_0071_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88913,
+      "sha256": "bd9ebac2581c91b3edf1d7e7bd149036652fd1defb79f7340c66c94a30859323"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000047_0018_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85323,
+      "sha256": "0666c1a9f50c0e71f9896710ec43fe2087dba28e852e63142b74e437d1b84e51"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000065_0048_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78746,
+      "sha256": "a10f986a160445e47d41e2d1d5aad190e8351ba5ba1f7bfdc10f5a494ddd8162"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000066_0074_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 91771,
+      "sha256": "f172c3c7f03d4c79fd57a5e7be82a23039d92d4c41819989503b9b3928c3e2c1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000072_0050_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79965,
+      "sha256": "c216937ef4c1bd68fe52df2363f6d66e540b3409aa58c7d59ef44a6c6995d786"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000080_0053_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78897,
+      "sha256": "77ea73b54d48fcb51f915c8441e8173608b7c39cf20530bd4e7c828026673a86"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000088_0032_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 81293,
+      "sha256": "edc1b442b58782ba9fcd89fed748ca7be443ef8fb7649987e8a9b9aa66140d8d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000095_0067_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86668,
+      "sha256": "27dc3b4ea43e074c7ce2b995a396912bcd69ddd6a7f3f90123fb161dbe4abca5"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000098_0142_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82749,
+      "sha256": "02de625285d6e7dc4aea26cf0c525a3d2e66d0e507e3500d9a453d3f9bfcbb03"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000099_0005_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 111839,
+      "sha256": "f1681f4aa9e34e6a3c3269a7a192faedfdd2e67858ef3e171edd4aa8e4876965"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000100_0003_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 113898,
+      "sha256": "3a04433944dc02aea7144dae0ed1c5e9f63b8616bdc7ae647ebbe46f3265bbfb"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000103_0029_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94513,
+      "sha256": "065c1ef8fa76c5ea2b37dae396fa4b8830796ea83f7a046573e6b505ba06ea97"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000104_0142_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 113754,
+      "sha256": "42dd263aa971adab5641bca2e841dc66cb7e6998fd4c0cefbdd978f59e55396c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000117_0051_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 80870,
+      "sha256": "414a2ff92d991e0721bb3baacf4ff3162091c96d3a2be2b2feb4f1be564fd9f6"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000122_0113_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94871,
+      "sha256": "bf79ad9302b39697996537d2d61bd2a9067949ce20db8a2c7fa87684fcf72c73"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000126_0016_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 84837,
+      "sha256": "4d9c98d35a19ba2b8138187fa7c0a44f4c4c693398122a0d228dde40476da2b5"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000130_0055_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87164,
+      "sha256": "5788a9f1b8c12c63c2e7f51bf9f2bad5d5db8bdcce8af1f31bd581c0d549e315"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000135_0024_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 81466,
+      "sha256": "adc56d8bad102c09fa02f48b6b38b7a0fdd955896afde02c4f1814ea625193d3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000140_0088_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 81504,
+      "sha256": "5d267f3645bfb9927ae8827cd67558c8232b2151402e0266fddef29b20e00539"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000151_0023_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88639,
+      "sha256": "87c61f3d556065ae41169f0b6836b77627ece4cbe682a19236020b18631ace13"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000152_0079_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 103658,
+      "sha256": "244584d10f9a782ed43002a0001332445ddbd78f4e0e450bfcac6dc77e2175c2"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000163_0096_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 96094,
+      "sha256": "09c8f47caae079e093b09f01969c75b8814a2c0f6eb462ccafd87cd32fa7dfa1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000165_0042_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 96482,
+      "sha256": "0a4fd4a1dd2887005f370826a4a05cc600de8150b41a8a5ac295d5b3eba5dcb0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000168_0018_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 80331,
+      "sha256": "b62c379e321ebd10b2f0f1a5084e7e991ef6b7ff12d2fcd0d143d78829637eb7"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000172_0058_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90818,
+      "sha256": "949a22d68947cda6fd7d5369c61da13e8b9a70eccb8f27cdcd35c5bbec2bad34"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000174_0043_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90784,
+      "sha256": "dadbad1f5b9a6c37d6d4de5da9ecedf6c8b0c1843365158842e818c970818655"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000177_0014_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88917,
+      "sha256": "0eb77e65b4fcb59836ab1757df5b01a8f6bc62f2c377655290532cccdf17ded3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000180_0097_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 108158,
+      "sha256": "a82c15cbe09845556a5d2ac7b80f26f49e8f37b1de12fcae21d34c3807e1dc3c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000193_0025_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 83076,
+      "sha256": "d0fdc1c16634d6302b07a6e0d3fa3be2233e7f70cad160317bec683612cfc7ca"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000201_0018_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 89976,
+      "sha256": "868a075a5b48d863d6861cdd3fbdaf7c08c0b87cdc29b83961e4037e3a851c57"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000202_0086_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 81449,
+      "sha256": "156febaf6b905e192ce6283b51b559791d9406cbf724dd613f3ae939c43dd2e0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000209_0051_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 69609,
+      "sha256": "c794d4116b9c0c554ca46729ec62a9aeb8d908a5601b03bf96172bab9fc24cc7"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000211_0080_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82348,
+      "sha256": "c0526fd472f0dd0e9549108cde4acdebf964c6dee651f1e59d98911a7af7400c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000218_0014_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 76354,
+      "sha256": "e7975274d3be6a3d61ec1b184780e5a47f6a18fc4a622924aca4deedda5bdcaa"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000218_0197_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 84020,
+      "sha256": "b22cdc418f15347de1a8f5d456412205a8ea09c8d370eef639d325f689ad48a3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000219_0189_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 97160,
+      "sha256": "8d1581a0b594debd46338386af09cc07d23a7ed53138e4ac7d3b5742fb11bef3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000223_0007_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87846,
+      "sha256": "793f238498ebe5639a22895b29a20ad8b1f6bcf228efa4de7e1de105a9f326f5"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000225_0116_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 84449,
+      "sha256": "da0dababbf2b0514058d7437eb8e85626e193216650e417928c45f6d3bb3fbf3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000230_0060_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 83488,
+      "sha256": "15826b10f35271220fd456bf5a71819409f5062542d63b1437b21ce24d1fec94"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000235_0202_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 84906,
+      "sha256": "36aa74504bc5d4f01e1a3eda78b8aaa8aea9e50bdc5815c91c13ba2b9830bd47"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000243_0098_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78634,
+      "sha256": "d82c1c7760a8e706481b1ce2041b8e29838ed2977d89070f1a71666f2c56aab1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000244_0085_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88051,
+      "sha256": "0307d2649eba74002d3894cc4d3573d3fa8a329825ca38f44d1e233f9e23c5fb"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000258_0005_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87816,
+      "sha256": "f541b675344623a0a09f0dc21fa41c5b1c4c126c99932b67e4db518badbd6429"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000262_0078_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 108156,
+      "sha256": "28d7c40c47d3da9a666ee46d5556218ccf56603a42a46e954df623fbcd4d22da"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000264_0173_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 76846,
+      "sha256": "ac3ed25c92fb5b6a44715f4d1f82fa1355ab267c4c5a50c66acb31af91cf70b9"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000274_0063_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 93802,
+      "sha256": "170d60a34fae4843d3e7b730bb55be97e886d620bee07ab8642ca6bb077a4faf"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000276_0059_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 68531,
+      "sha256": "95c6e6112b1dfc6c2e2ea10bda5b26edf224c5a8f1807ad60c3fbd07c4e3e71a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000285_0048_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 91227,
+      "sha256": "ff7cca0c503ab6c1cba162fc45702e5c02a721351ef091346dc5f2a89e1a418b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000288_0020_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 106388,
+      "sha256": "7b84031e3690c8f3e862922e7922141bdf419ca48d417304ef1f33afbc206dee"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000295_0085_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 95934,
+      "sha256": "f66beb1bf55424513775cbdd3c9bd8deff409f24d8ab29cd9f8b37d44e78dc49"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000305_0006_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88754,
+      "sha256": "ab87f9e4c61b2e8839588ea313a596f783dc890a1b60688d4a17cec3a02a3673"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000309_0080_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88060,
+      "sha256": "f244eab77d97b4c03392543ee034163a80640a8e13e512a52edbf23b7203f9a6"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000317_0018_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 71524,
+      "sha256": "ede84dc73a0dd53c43bda02595e9afc54145c3976ecd5b61601c02c8eab6eb22"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000318_0062_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82878,
+      "sha256": "b940c590d6e11552e288080ba6296e82041f9a06ced1aa0d21d531be6739a01b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000323_0120_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 89738,
+      "sha256": "e111cc6d12a7652feef675267f95cc9d1bd0a80336dffe9f83a0630527efcd04"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000326_0116_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 100193,
+      "sha256": "99db7b91df0d914d94dacf2480df8a3ac1ff7f40236d6adca932dbc1cb842c63"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000330_0142_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 92227,
+      "sha256": "3caa03ecf0965a3ec642146ad0038f9272fce00cc1d13cd728dd617505bb83a7"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000350_0023_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87955,
+      "sha256": "66664a1ee87e6144e531d35bd59a32fac4879e2858de3e3a994b9d1f7e5e07c0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000351_0046_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 96528,
+      "sha256": "90adc87546a1e2d5a163f01a8883f5f3d1151325815ae360430b7682f1963398"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000367_0004_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 117500,
+      "sha256": "c98e21eadb08beb622239157587c046638a034b0e723e754988fb8ea3a536c30"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000368_0011_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 69399,
+      "sha256": "0f142ca6eb095995e8f13760ee34febe1b8110a139c2a6d0d2b2e8705cfb7aa5"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000373_0048_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 106799,
+      "sha256": "90d4ba0d56c62e4611ebc129aee4e8dc6d987c1570da2c032f3ccd4f79b0aef8"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000373_0382_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 125302,
+      "sha256": "d45448f28cbe949ec6d3428dc425e73f9c16f9a4378064324ef216571585d917"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000378_0129_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 77117,
+      "sha256": "b9bd90d5af61a2e155b0abdaa2fb09352dd6cbcfa05057903491274c672b06f9"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000380_0149_03.jpg",
+      "role": "cloak_bank",
+      "bytes": 114317,
+      "sha256": "f3cc2286487bd65df16595ccc746f00c9298b7a5ff414d9fa6cd2686e8a15f13"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000386_0014_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 99295,
+      "sha256": "a8bed3ee5c8f9d53cca6025496fe0c16af41d237780961b0ea35494ae3199a8c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000389_0021_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 72083,
+      "sha256": "f06de973c69aefb1c186bca82f98f327579a75ae1f78ae8a4dd20f5ac81f982a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000392_0010_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 101629,
+      "sha256": "62dc3fe8160b4afc59bc8e05f45447fe32da94ee4d0a7123e46f810c08ade3f2"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000397_0088_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86945,
+      "sha256": "74ac517f303c10e8d83f6f0432b9b2f9ed5b1e1dd9e33e5c68c03a032a0856a0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000398_0031_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 110070,
+      "sha256": "7b458bf45504a35a5aa8e76de6dafd7589456a1f900217b9729173fd89af9cdf"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000399_0028_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85915,
+      "sha256": "e76c6e39d30ff9cc09b750a4ae43880e648867678468a5bed2df076535601bb5"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000406_0083_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 81065,
+      "sha256": "7958fdebdf84a272ed3e8ddc416ae1f76caafcd9c2092c626869c01b0d8fae8d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000412_0047_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86357,
+      "sha256": "f14f9ad4de016df43d980e6c67098c7c4afdea8e9c94d0eec316d2af402660f1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000419_0060_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90662,
+      "sha256": "0194af5698d38d18392e98f94a2142fe08015e12e6b8608840c6e11eee3c297d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000421_0065_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 71061,
+      "sha256": "2f61405f0acbbe0fb607cd72427644f1a23c968f876c06f390b6a6a246534620"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000423_0055_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 92654,
+      "sha256": "1a89e74346ebc5dfd8a6c75e313059edbc6103044b0ab75e260e7a52d17d663e"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000425_0029_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 102434,
+      "sha256": "e971e3643a3e301265c94ac77947a0b73cc701037ac38a95161e4963adbc3541"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000429_0149_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 97230,
+      "sha256": "141deb956658577a04810fcb2c7e0c9cc25258e8059bb5e6899821c25fb8df5d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000432_0020_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 117553,
+      "sha256": "3f35ed67007c0308e940fe3d2bd800eba14901d8a9976f209c3a7ed64e1ffbad"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000434_0121_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 87687,
+      "sha256": "ef28066aa99a2a6e6805057386e9191c01d0d77ae48d8d5d6e88e30a9f995fba"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000435_0043_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82805,
+      "sha256": "31803a7fda84806b9fd0f466edb47b05af0ebaa48704b3b891d471d9b539e1aa"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000436_0163_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 76609,
+      "sha256": "3485ffbfa4a296932c822da03f7f53244436baece839f47314940374e56445d3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000442_0011_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87678,
+      "sha256": "0bd5262ca5e558467be95a3cb2cff04ac3d71952cebe016641ad50d3d52221fc"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000446_0046_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 83250,
+      "sha256": "8b60c3468788889b3e39ed1b81560ed0230fb890b41198d57a634e1fde6dc264"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000448_0013_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79931,
+      "sha256": "730daa193d95b5cc8374e9eaf2bed716f9f209569ae7b631d374d926a4993478"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000450_0003_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 116293,
+      "sha256": "2ac2e42ca8d352ff8fd28fd4a8a37105edb23fd73a34aa03eaa17a84b17538ec"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000455_0078_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94290,
+      "sha256": "01e4f1c04638bd9fb0f7a49e617540d4d91575e953e48097642d1414232e7c2b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000456_0016_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 95072,
+      "sha256": "e21683a7e1e251de54bba3b53d12acf0c8ffec24f0d6a55e39ce3cfd6765b99c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000458_0016_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 91019,
+      "sha256": "7cbf5adcd82f2af6fb53bcf185eeeb02788a45338602fca9f0170471b5ce939a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000461_0026_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 80234,
+      "sha256": "492bbd5916becd05a010bb734322e074950e37b71c092016e9f710652cef5793"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000466_0012_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 67004,
+      "sha256": "661ed48aee99725142fee56623dd72467ef4f29f6e651774e87f2d791f365e3f"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000471_0081_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 104429,
+      "sha256": "33a021a58f6e6e9d062be3836047df0546c0a0d442542f440dc70e35585e2951"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000473_0005_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78426,
+      "sha256": "c0434d80f7e5f71253e4719740462f3b1561f19c27ed3608a5480314e5cc7ae0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000477_0168_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86406,
+      "sha256": "33249dfbd69850d5d3e745acc95bac07cfe2bd22b6461ff75ccc55311235f7e8"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000478_0053_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 74358,
+      "sha256": "6297ca533054525baa0f287998fd8957e4078e9ed6867a1e261bb78853048a16"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000485_0117_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 103685,
+      "sha256": "0f96e24977cd83225b4618eea6774f2f2d3e3ca246d9cccc2bd7ad5d63797ae6"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000486_0032_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 83880,
+      "sha256": "488affc90b6cd448796ddb216c81f167a0fe59399232d2ea4c58fc31eb70fd51"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000496_0011_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 107274,
+      "sha256": "0185ccb486c279e07be8ca749876452fc0f31db4e11471ddbb922fd584f37552"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000499_0081_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94110,
+      "sha256": "db8becbff27e0e110f21d03856e02db405b8ba4a53f132b78e3b39bade3f77b8"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000511_0038_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 80622,
+      "sha256": "8dcf5cd6225e6ca5dc079364d0dae32dd92552a81e933fe16067c3d50b182e2d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000516_0037_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 89685,
+      "sha256": "56a4cd60d3ee67c577e5d2034cec6358ba813cc9746267bd7790ad6087bbdef4"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000532_0055_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82190,
+      "sha256": "533cd2221e716cb4767351c39b0518577113db6be48e2dfcd7b266c1bd30aa7c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000536_0021_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 95516,
+      "sha256": "56a821b07fa357922625af6b66a5fab800be73a8489b98947a54bfc71d9275e1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000537_0007_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 80864,
+      "sha256": "c79c694d0507b7ae022f0e4f7a9cafd5946243ba5b5e80c5bad315851a3f654f"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000539_0042_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79144,
+      "sha256": "3f2b56063f92690115ac02d75b633ef7597fd10a72e586472fd0c44c406a01be"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000542_0004_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 73882,
+      "sha256": "d7a31b16479aaed09a34ce5fb63d3eab5f3f9cd530618f2823e17593e9047bf1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000549_0278_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 78463,
+      "sha256": "d1614478ce32520ca80f92e8476265d3f7af683fb13410707d621907099a3f99"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000551_0145_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 70497,
+      "sha256": "68decccbf480d05b72251c4a7e4a171404994abfe97f90463c9c645efa2f7d0e"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000554_0066_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 89746,
+      "sha256": "a21b0e777164025886e2f43a230ac5c258aa7760002478897d1607c076b2d507"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000558_0099_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 84889,
+      "sha256": "c11d1f0b0e04957a08d588ec98024ff113fe0e99dcf6c2e6072a11c0351bfa5a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000560_0069_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 70450,
+      "sha256": "53858fca88637aa57026cc14c1cc231840e4a8d351bfded0689264ae7a7c42d3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000561_0068_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 107891,
+      "sha256": "b9d4c28b9bb18ff580107ad5632f2ff50e91ba52647f9073780b5a56c0812939"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000564_0013_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 103791,
+      "sha256": "1416f4945cfa1f264eef4cff6e7ed5b566103f5f136beb6f5dc911398bd160dd"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000569_0028_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 74370,
+      "sha256": "698377e5ccfc039ca93a80e2bae7bc7237a71644c78e571fa399920171e42df1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000577_0068_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 105992,
+      "sha256": "884557a575e242564c0ae7bdad2cf95c4a140c388eba3ad6b66ae90374aad98f"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000580_0037_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90734,
+      "sha256": "a275d4600af862fe2ad90158d61db2049e33fbe8f518e23cb9a6b8a01c6b9ac3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000582_0013_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 69055,
+      "sha256": "48803354fa0d7b754fb91b68ea55dc0ae62916926a60636266d9b5ef3f3983fa"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000590_0021_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79973,
+      "sha256": "c1afc3ae32e9b3de59016760c36facdda2e2687b5d2fe3fae7da592cac1d0451"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000599_0027_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 91096,
+      "sha256": "3808fbb85eac6c10486a5ba5745e12053067d914eed80ea54fd1a14e52f7be9d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000602_0099_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 65987,
+      "sha256": "b20d98d16ddf003087525a9119a6a5a9a31651d107a9144b3c4c4d556fa0a62d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000604_0061_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 97007,
+      "sha256": "bc8cd4199bb9546dcaef68017d914065cd53bd7ebe11bb955ea5005f680fe002"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000606_0041_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 105936,
+      "sha256": "b6fe9e9f87c82926bdba33c8b7549ae0c4602648dc451699772e9943b8fdfe07"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000620_0026_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 74413,
+      "sha256": "e8da0c633005e37eaf2b7d5219dc0a1f1d07e1c15cb79969e58af5df432c8c11"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000629_0037_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 99542,
+      "sha256": "ddec07ed994d40902aba4e20058b026c0be323340751c19d443ce63b7b03ffa3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000630_0004_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 103266,
+      "sha256": "7059b11e5740acf874dc83314f6f12bdca45a9c2f11c27e674b5bbb6ecbb9991"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000637_0095_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 92250,
+      "sha256": "5a09186ff4169d62a7736cee8dfaaa7115f9fa4598dd9e7e2b31ace827f4e06b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000644_0017_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 114254,
+      "sha256": "ec56c208aaf16bc27945ad2bdcc0d57bc1c058197c26ef9652c7e3111bde461d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000649_0010_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 101580,
+      "sha256": "5355f15238661ace4d107cd3a2262c8acd63187c89a41f5433893e01bb920c10"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000650_0006_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 108023,
+      "sha256": "548d442763ef3b1957f9b8817b715a679f2302f135c78da42452f3b1b2e9209d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000651_0008_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87995,
+      "sha256": "3347c25b00c0dcd82c7af5ef8e70f9d4c0a4ce3c5475504f2f6766cea033c97a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000655_0067_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 93847,
+      "sha256": "8dcebb87487df26f2c060eb5fb3b92acd3a29bf7733b3fb84bf3e2ee2f34ba46"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000664_0009_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 83158,
+      "sha256": "fcdf9e83f54773d431e080f217557456b6f8d0a0e4b5c1d702ee0fbb7327f5fd"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000665_0065_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 110092,
+      "sha256": "325382cdae9b68ff6e40be7e8f74dd815f55fe50aa59000a4010fe52fb977a30"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000666_0016_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90902,
+      "sha256": "5c546212517da17ad44ef3746742ea38939577183839fd393d7ceffb0e8e9c8b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000669_0056_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 77832,
+      "sha256": "5edf4b7ab85bcebdaf0e9ea27429b46ddbfacfc8213213446d0929425eec5a2b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000671_0008_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88590,
+      "sha256": "4b3963beb24f957c40ec83058f173940da2377f91fc02f58543896dc3d259b9f"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000673_0023_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 68734,
+      "sha256": "be6632d182693448dae5cd9d0ac2ef3d3aa37613d3834f15cc40457ce2073db0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000674_0092_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87420,
+      "sha256": "651a611c68d4f60067b1bd9dc0160ed98080bd1390da0e63f1c66f8900aca98c"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000675_0129_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85947,
+      "sha256": "f577d938ef666d894a45ad5092c027d061e28d603363594c14d0803425616ad2"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000676_0026_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 97769,
+      "sha256": "aba91415dc3d871f52b80a52bcb6c79a7e559d4d1f3ee6b0c87c6306e2b097e2"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000680_0377_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88922,
+      "sha256": "e1c7fe6f28d4f38d3a27f4fd0cc5d6c02644325b078b21b496b9a4bb5f3d2755"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000681_0043_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 95295,
+      "sha256": "88a41e77b7ff9b088417e73d0760e684e3e9b88c6ca6b71ab2099fed906c24a0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000691_0043_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82860,
+      "sha256": "ebc0a6cb7cafa23ea5113bb9ddbd00b36040c7e9c3ada5dd5f1b56b59686fe63"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000696_0028_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 76955,
+      "sha256": "324b694ec6ce13ae0642980e087c5c255f20b55aa86db658fb0b4a70a75312aa"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000698_0081_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94428,
+      "sha256": "597f40877850da11bc060ad5e03f5c0953539373dda15221392e94c0cc50228a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000700_0048_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85710,
+      "sha256": "48aec4a6e4b8d1760199b9416b08205da9a89764948a89e9ae8fd391561c76c8"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000702_0031_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86014,
+      "sha256": "9e3d333aad025f166319692d3c954444630366c5171751d752a6db3fca590f46"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000703_0031_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79360,
+      "sha256": "2c19f97cfe3c0a8f329b8bf52c08020f9d59522b13c2cc18273eb3bd5387e5c6"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000712_0095_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86468,
+      "sha256": "34566dd1f1ea00e71775e933c04f21633628d0426bf457cdfb9cc140e2a0cfd6"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000719_0056_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 104482,
+      "sha256": "e85993c2912bdd30050a0466ea2933fc496eb459f467a2b2154369231437490d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000719_0859_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79934,
+      "sha256": "9a005361e741d9359760a8558117e4dbcdb72b99de4df52192176bc1ddf9fb55"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000722_0068_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87569,
+      "sha256": "da8fb6a61d5816c689cc3afc54151662f890ef06084e071aeb94f577ddddc58f"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000723_0010_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 94316,
+      "sha256": "a8f42611ebc47e710e7794dee80750e0e12f439cf8aea8d1a1d9d75ebc30cd5d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000723_0103_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 102989,
+      "sha256": "7747112dc14d6e3ffad5d6e0308ec5f5b5bd498e6d14c9eb1aa90f906b9324d9"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000724_0280_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 86047,
+      "sha256": "42f66c445901d97dd12d1cf5e2513a897a55bba8d36e25f3c057f354541f3bb0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000729_0066_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 59589,
+      "sha256": "1b19f5e0880114af09a03e9cda76240d690012f6c55803a641d1688355739f33"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000732_0026_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 86854,
+      "sha256": "72486a36e37a3e798571e8c514a07379c0d6d840bba7756731fad4d0ffcd1b3b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000732_0110_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 84007,
+      "sha256": "d2e7ae5ea4795d78a312b55269107126a479fc5a2760d44545005f5b290e50c0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000734_0170_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 69721,
+      "sha256": "a0a546dac5373b74270ccb13ea00dfcd800b3ddf9b4d0927f3ed12e988575c0b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000739_0367_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78096,
+      "sha256": "148420b58b8e44e64f60c4e92cbcc1feb8da3788729ac7bc81c8fe8b21fdb6ed"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000741_0013_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 81623,
+      "sha256": "b78b3166f9600312e3b130ea506bd4208ae4ef4b207db2b1ceaa2102fca7d448"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000743_0176_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 86406,
+      "sha256": "2cd1cd76ae58dd53fa17d3aaa63bb5e8c89f8106e8f21039811386073a862877"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000747_0058_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 87255,
+      "sha256": "091890355da20e14d1425b351568da7552e29a6934a0fe0c2cd479cbf6c785db"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000748_0074_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78046,
+      "sha256": "47e47beb60247e470e1072faee2f3aaa98f7660a0d76b25c62ae24236942214d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000764_0084_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 74034,
+      "sha256": "49463d01ef6e29dc3edf153b60d81020f5ffe9647d6eead49c2aee94c1f60206"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000766_0017_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85134,
+      "sha256": "53d01355e3ed5ac34c09f85aa42bc48692d1fea3ac26a30a9fd2d4453ef2037a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000769_0087_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 89538,
+      "sha256": "20f995d92946ea782f719842945b1bd778fa487760d978b1f1b243e184b7c497"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000780_0085_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 92971,
+      "sha256": "2cf657da7bbe61ecf0060bbcfa56529fadc1f1900331fcddb38aa202854f3c6b"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000782_0476_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 75072,
+      "sha256": "b9102317c1265e776c8d77f7d878643d3d8b3e9ed5dc698287ac963341179b67"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000789_0516_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 74302,
+      "sha256": "bfdb19bd12de709f4ac077dfbc2f4b7c1e5b963e2c3c2a5ef87bcb54d39c7bfd"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000805_0072_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85624,
+      "sha256": "b7e1966b629e02234005ad3aa345c1196a0b7b00aabe1e48b14c447e2608d6f0"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000814_0461_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 77834,
+      "sha256": "3b993fd35ce49a907705729b7f087724d889d3a988ad374b03e9e76a9052b284"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000822_0041_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 77753,
+      "sha256": "4ce2f8a0ec67dba1fc71e08cb2c00aa64dabdd2afefd90073b1abc158cb95fc9"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000827_0200_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 88677,
+      "sha256": "194684f667b37ba5791b78791ba00ebddbb8c07f11532274a8dcd7ed8ef158d6"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000831_0012_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 85731,
+      "sha256": "da3c71bf3c01ea57bc5abdf4682b0a7a6e4bfad852ff899ea710105408e40501"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000862_0083_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 91543,
+      "sha256": "173abecc4732af2155d403d1131ffcac1251e69dcf3407ac20ed2af0831cacc9"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000871_0075_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 81508,
+      "sha256": "6162151a3b72a5b5d9d4b4c8f93d7be1ac6d248fc1b570648afe9815b8882657"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000881_0031_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 69981,
+      "sha256": "783202d930ce866ae55570571411597943f206b15ac9e8a2d770e01603509322"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000884_0029_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78721,
+      "sha256": "73d51a5af40a49b88aafa95510f06c80ff2595a68bd477064f549b0f17e29d76"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000903_0037_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88131,
+      "sha256": "2f2a681ad5f83a134e25d64f8e7bc162a1769a45cba49c1aca9d4e74657ff12d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000904_0081_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90491,
+      "sha256": "b62649e09eac3f695cdc703eec48d3c2c321a6f5f03772ea1455d3874339742e"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000907_0079_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 92582,
+      "sha256": "463cde2b945d45011d29351a3bfdfecb50edfa60d4ca88753299a03ace043f19"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000926_0232_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 79660,
+      "sha256": "d5a51488136f39db61ff3515211cfb9dda6d5951227c2a1fed66d17b78819eaa"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000956_0360_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 71744,
+      "sha256": "ef05e3fe75e8ca0ae46dbf812a02b30af23f77aa7bbeb2ae69009b5bfe520306"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000957_0045_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 77680,
+      "sha256": "34035b46450639a57f8771f5a6d1ee4a6105b9ecb7bb08f40f42f444df333916"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000962_0003_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 97215,
+      "sha256": "37d96dfd3c84c9801b489b0984939c72944e701a8cec04c1b9a5a12a6b7b6779"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000969_0081_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 91603,
+      "sha256": "0bfdacdc46937e1f0bc415c8ddcc3b73bcc6259b38b7b64413a4d4c2e3ce9ac8"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000972_0019_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 100908,
+      "sha256": "418abc0b77f5c622624db606c6215b3015d054d5acf9ddec4049d34cccf6a55a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000976_0121_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 67987,
+      "sha256": "f1a3187df452704e91d126348bea095b428be8985229d669e671cc5294f4b35d"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000976_0283_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 68280,
+      "sha256": "6ea505c8cab7b01a3702030b89f5fb5093e1a70250e6ec897e498c0612f11a02"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000983_0325_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 84404,
+      "sha256": "9cefe03f00381236673a0af45b577bb9ad387e46ba05c8850897e8c30ddc38ef"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000990_0066_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90468,
+      "sha256": "678e015eed7dd340b636ecc659fa1312be862df4f3997e04d590316003e54cf4"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000995_0291_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 74829,
+      "sha256": "752e9e101495ad59e435bffc4a163c96c6361d6cdeece1e9a60159a730d93067"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n000999_0081_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82946,
+      "sha256": "0d3eb5d7076f35a59e5a5bda798bf8a838c00e009d1858824bdb4114a9d122ec"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001036_0011_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82725,
+      "sha256": "f8ca4ee2b2a3858c8d101ac67591005f542437a4276469902acd87bfcad44cdc"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001038_0268_02.jpg",
+      "role": "cloak_bank",
+      "bytes": 84386,
+      "sha256": "6b413ce8816232cfeee5abee830023731a95013357cc31bf9519ad6878c4bef7"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001040_0073_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 82983,
+      "sha256": "cce43bb13ddd9a6aa57a540151db52e51b9508dfb53f8b6b2b2faa10d3aab908"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001050_0045_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 78808,
+      "sha256": "c68fcac486471f7f8094c44846d43f724ff0a38f3cf6b2735e478a92375ce24a"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001056_0002_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 66443,
+      "sha256": "fd03ab9a032536fdaceb1cbbd4bf0644cc60296907ebdf4a1945cd71470a8ee1"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001063_0162_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 92378,
+      "sha256": "54aba272cb8165f811cf204ab0b55993fca897465e32eb811b609382474976a3"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001066_0030_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 103597,
+      "sha256": "6389150a5882338cffcdf748895ab5e22ff551257e1b5951496a4b8d03e64104"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001068_0061_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 90827,
+      "sha256": "fa9109a8061dc1a771919d17c00c483122b974db52f49b2d964dc6fcd32359cb"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001080_0004_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 89048,
+      "sha256": "559da3db9db48a838699c8a3e03848b52b9d6766f8a03862a298868c32fc8fca"
+    },
+    {
+      "path": ".cache/phantomseal-downloads/data/vggface2_cloak/mix_full/n001083_0016_01.jpg",
+      "role": "cloak_bank",
+      "bytes": 88797,
+      "sha256": "6632693c57491e7400eb141160b2c28983459674124cea47332f5ecb05f09070"
+    },
+    {
+      "path": "utils/faceparser/FaceParser.pth",
+      "role": "optional_legacy_faceparser",
+      "bytes": 53289463,
+      "sha256": "468e13ca13a9b43cc0881a9f99083a430e9c0a38abd935431d1c28ee94b26567"
+    }
+  ]
+}
