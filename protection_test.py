@@ -92,7 +92,7 @@ def run_protection_test(*, root_dir, output_dir, source_path, result_path,
     labels = {"clean": "Clean source", "stage1": "PhantomSeal",
               "final": {"phantomseal_faceshield": "PhantomSeal + FaceShield",
                         "phantomseal": "PhantomSeal", "faceshield": "FaceShield",
-                        "nullswap": "NullSwap (reconstruction)"}[mode]}
+                        "nullswap": "NullSwap (reconstruction)", "custom": "Custom pipeline"}[mode]}
     if benchmark_runner is None or models_context is None:
         if backend == "simswap":
             from benchmark_chain import benchmark, swap_models

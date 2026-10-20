@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "server_started": false,
+  "network_blocked": true,
+  "dimensions": [
+    1280,
+    1280
+  ],
+  "recipe": [
+    {
+      "type": "nullswap",
+      "params": {
+        "strength": 1,
+        "seed": 0
+      }
+    },
+    {
+      "type": "faceshield",
+      "params": {
+        "iterations": 1,
+        "noise_clamp": 4,
+        "step_size": 1,
+        "analysis_size": 512
+      }
+    },
+    {
+      "type": "phantomseal",
+      "params": {
+        "iterations": 10
+      }
+    },
+    {
+      "type": "nullswap",
+      "params": {
+        "strength": 0.5,
+        "seed": 42
+      }
+    }
+  ],
+  "elapsed_seconds": 33.03,
+  "max_pixel_change": 16,
+  "first_default_nullswap_matches_previous_pixels": true,
+  "independent_repeated_stage_outputs": true,
+  "progress_monotonic": true,
+  "test_backend": "simswap",
+  "conditions": [
+    "png",
+    "jpeg95"
+  ],
+  "published_swap_outputs": 4,
+  "note": "Reduced steps and an upscaled public portrait verify execution, not defense effectiveness."
+}

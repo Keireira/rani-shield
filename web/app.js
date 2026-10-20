@@ -2,10 +2,26 @@
 
 const $ = (id) => document.getElementById(id);
 const viewModes = ["original", "split", "side", "result", "diff"];
-const defaults = { mode: "phantomseal_faceshield", phantom_iterations: 1000, max_size: 1280, iterations: 30, noise_clamp: 12, step_size: 1, nullswap_strength: 1, nullswap_seed: 0 };
-const methodLabels = { phantomseal_faceshield: "PhantomSeal → FaceShield", phantomseal: "PhantomSeal", faceshield: "FaceShield", nullswap: "NullSwap (reconstruction)" };
+const stageSpecs = {
+  phantomseal: { label: "PhantomSeal", fields: {
+    iterations: { label: "Optimization steps", min: 10, max: 2000, step: 1, value: 1000, integer: true },
+  } },
+  faceshield: { label: "FaceShield", fields: {
+    iterations: { label: "Optimization steps", min: 1, max: 200, step: 1, value: 30, integer: true },
+    noise_clamp: { label: "Noise limit / 255", min: 1, max: 32, step: 1, value: 12, integer: true },
+    step_size: { label: "Step size", min: 0.25, max: 4, step: 0.25, value: 1 },
+    analysis_size: { label: "Analysis size (px)", min: 64, max: 1280, step: 64, value: 512, integer: true, multiple: 64 },
+  } },
+  nullswap: { label: "NullSwap", fields: {
+    strength: { label: "Perturbation strength", min: 0, max: 4, step: 0.25, value: 1 },
+    seed: { label: "Seed", min: 0, max: 4294967295, step: 1, value: 0, integer: true },
+  } },
+};
+function newStage(type) { return { type, params: Object.fromEntries(Object.entries(stageSpecs[type].fields).map(([key, field]) => [key, field.value])) }; }
+function copyRecipe(value) { return { mode: "custom", max_size: value.max_size, stages: value.stages.map(stage => ({ type: stage.type, params: { ...stage.params } })) }; }
+const defaults = { mode: "custom", max_size: 1280, stages: [newStage("phantomseal"), newStage("faceshield")] };
+const methodLabels = { custom: "Custom pipeline", phantomseal_faceshield: "PhantomSeal → FaceShield", phantomseal: "PhantomSeal", faceshield: "FaceShield", nullswap: "NullSwap (reconstruction)" };
 const backendLabels = { simswap: "SimSwap", diffswap: "DiffSwap", infoswap: "InfoSwap", uniface: "UniFace" };
-const fields = { phantom_iterations: "phantom-iterations", max_size: "max-size", iterations: "iterations", noise_clamp: "noise-clamp", step_size: "step-size", nullswap_strength: "nullswap-strength", nullswap_seed: "nullswap-seed" };
 const state = {
   uploadedSource: null, source: null, result: null, stage1: null, sourceImage: null, resultImage: null,
   mode: "original", split: 0.5, zoom: 1, panX: 0, panY: 0, rect: null,
@@ -18,7 +34,7 @@ const state = {
   testBaselineCutoff: 0.80, testVisualConfirmations: new Set(),
   pair: null, pairLoading: null, pairVersion: 0, diffCanvas: null, diffKey: "",
   metricsVersion: 0, resultVersion: 0, space: false, drag: null,
-  settingsDraft: null, presets: [],
+  settingsDraft: null, presets: [], pipeline: copyRecipe(defaults), intermediateAssets: [],
 };
 let toastTimer, drawFrame, transparencyTile;
 
@@ -72,66 +88,133 @@ function resetView() {
 
 function persistSelection() {
   try {
-    localStorage.setItem("faceshield.selection.v1", JSON.stringify({ uploadedSource: state.uploadedSource, source: state.source, result: state.result, stage1: state.stage1 }));
+    localStorage.setItem("faceshield.selection.v1", JSON.stringify({ uploadedSource: state.uploadedSource, source: state.source, result: state.result, stage1: state.stage1, intermediateAssets: state.intermediateAssets }));
   } catch { /* Saving a browser selection is optional. */ }
 }
 
-function methodNeeds(mode) {
-  return { phantomseal: ["phantomseal", "phantomseal_faceshield"].includes(mode), faceshield: ["faceshield", "phantomseal_faceshield"].includes(mode), nullswap: mode === "nullswap" };
+function recipeFor(prefix = "") { return prefix ? state.settingsDraft || state.pipeline : state.pipeline; }
+function methodNeeds(recipe) {
+  const types = new Set((recipe?.stages || []).map(stage => stage.type));
+  return Object.fromEntries(Object.keys(stageSpecs).map(type => [type, types.has(type)]));
 }
-function methodProblem(mode) {
-  const needs = methodNeeds(mode);
-  for (const engine of ["phantomseal", "faceshield", "nullswap"]) {
-    if (needs[engine] && state.engines[engine]?.ready === false) {
-      return state.engines[engine].message || `${methodLabels[engine]} is not ready.`;
-    }
+function methodProblem(recipe) {
+  for (const [engine, used] of Object.entries(methodNeeds(recipe))) {
+    if (used && state.engines[engine]?.ready === false) return state.engines[engine].message || `${stageSpecs[engine].label} is not ready.`;
   }
   return "";
 }
+function recipeProblem(prefix = "") {
+  try { normalizedSettings({ ...recipeFor(prefix), max_size: numericFieldValue(`${prefix}max-size`) }); return ""; }
+  catch (error) { return error.message; }
+}
 function syncMethodControls(prefix = "") {
-  const mode = $(`${prefix}method-select`).value || defaults.mode;
-  const needs = methodNeeds(mode), locked = state.busy || state.initializing;
-  $(`${prefix}method-select`).disabled = locked;
-  for (const [key, id] of Object.entries(fields)) {
-    const engine = key === "phantom_iterations" ? "phantomseal" : key.startsWith("nullswap_") ? "nullswap" : ["iterations", "noise_clamp", "step_size"].includes(key) ? "faceshield" : null;
-    const active = engine === null || needs[engine];
-    const input = $(`${prefix}${id}`);
-    if (!active && (prefix || key.startsWith("nullswap_"))) {
-      const value = Number(input.value);
-      if (String(input.value).trim() === "" || !Number.isFinite(value) || value < Number(input.min) || value > Number(input.max) || (!["step_size", "nullswap_strength"].includes(key) && !Number.isInteger(value))) {
-        input.value = (prefix ? state.settingsDraft?.[key] : undefined) ?? defaults[key];
-      }
-    }
-    input.disabled = locked || !active;
-    $(`${prefix}${id}`).closest("[data-engine]")?.classList.toggle("control-inactive", !active);
-  }
-  const strength = Number($(`${prefix}nullswap-strength`).value);
-  const validStrength = String($(`${prefix}nullswap-strength`).value).trim() !== "" && Number.isFinite(strength) && strength >= 0 && strength <= 4;
-  setText(`${prefix}nullswap-strength-value`, validStrength ? `×${strength.toFixed(2)}` : "Invalid");
-  const note = $(`${prefix}nullswap-parameters-note`);
-  note.hidden = !needs.nullswap;
-  note.textContent = validStrength
-    ? `Maximum change: ${Number((8 * strength).toFixed(2))}/255 before PNG rounding. Strength 0 adds no perturbation. The same seed repeats the initial noise; higher strength does not guarantee better protection.`
-    : "Choose a NullSwap strength between 0 and 4.";
-  const problem = methodProblem(mode);
-  const status = $(`${prefix}method-readiness`);
+  const recipe = recipeFor(prefix), locked = state.busy || state.initializing;
+  $(`${prefix}max-size`).disabled = locked;
+  $(`${prefix}add-stage-type`).disabled = locked || recipe.stages.length >= 8;
+  $(`${prefix}add-stage`).disabled = locked || recipe.stages.length >= 8;
+  const inputs = $(`${prefix}pipeline-stages`).querySelectorAll("input, select, button");
+  inputs.forEach(input => { input.disabled = locked || input.dataset.limitDisabled === "true"; });
+  setText(`${prefix}pipeline-count`, `${recipe.stages.length} / 8 stages`);
+  const problem = methodProblem(recipe), status = $(`${prefix}method-readiness`);
   status.classList.toggle("unavailable", Boolean(problem));
-  status.textContent = state.initializing ? "Checking methods…" : problem || Object.entries(needs)
+  status.textContent = state.initializing ? "Checking methods…" : problem || Object.entries(methodNeeds(recipe))
     .filter(([, used]) => used)
-    .map(([engine]) => state.engines[engine]?.message || `${methodLabels[engine]}: ${state.engines[engine]?.ready === true ? "ready" : "status unavailable"}`)
+    .map(([engine]) => state.engines[engine]?.message || `${stageSpecs[engine].label}: ${state.engines[engine]?.ready === true ? "ready" : "status unavailable"}`)
     .join(" · ");
-  if (!prefix) {
-    $("chain-note").hidden = !["phantomseal_faceshield", "nullswap"].includes(mode);
-    $("chain-note").textContent = mode === "nullswap" ? "PhantomSeal's reconstruction of NullSwap, not the original authors' implementation. Native 256px face perturbation mapped to your photo using the selected strength and seed." : "Experimental combination. Changes from both methods accumulate; the FaceShield noise limit applies only to its own stage.";
-  }
+  const error = recipeProblem(prefix);
+  setText(`${prefix}pipeline-error`, error); $(`${prefix}pipeline-error`).hidden = !error;
+  if (!prefix) $("chain-note").hidden = recipe.stages.length < 2;
+}
+function stageNote(stage) {
+  if (stage.type === "nullswap" && !Number.isFinite(stage.params.strength)) return "Choose a perturbation strength between 0 and 4. Seed must be a whole number.";
+  if (stage.type === "nullswap") return `PhantomSeal's reconstruction of NullSwap. Maximum change: ${Number((8 * stage.params.strength).toFixed(2))}/255 before PNG rounding. Strength 0 adds no perturbation. The same seed repeats the initial noise.`;
+  if (stage.type === "faceshield") return "The noise limit applies to this stage's input. Analysis size controls internal processing; output dimensions stay unchanged.";
+  return "Optimization steps affect processing time. Each stage receives the previous stage's output.";
+}
+function renderPipeline(prefix = "", focusId = null) {
+  const recipe = recipeFor(prefix), container = $(`${prefix}pipeline-stages`);
+  container.replaceChildren();
+  recipe.stages.forEach((stage, index) => {
+    const card = testNode("section", "pipeline-stage");
+    card.setAttribute("aria-label", `Stage ${index + 1}: ${stageSpecs[stage.type].label}`);
+    const heading = testNode("div", "pipeline-stage-heading");
+    heading.appendChild(testNode("strong", "stage-number", String(index + 1).padStart(2, "0")));
+    const type = testNode("select", "stage-type"); type.id = `${prefix}stage-${index}-type`;
+    type.setAttribute("aria-label", `Stage ${index + 1} filter`);
+    type.replaceChildren(...Object.entries(stageSpecs).map(([key, spec]) => new Option(spec.label, key)));
+    type.value = stage.type;
+    type.addEventListener("change", () => changeStageType(index, type.value, prefix));
+    heading.appendChild(type); card.appendChild(heading);
+    const actions = testNode("div", "stage-actions");
+    for (const [name, label, limited, callback] of [
+      ["up", "Move up", index === 0, () => moveStage(index, -1, prefix)],
+      ["down", "Move down", index === recipe.stages.length - 1, () => moveStage(index, 1, prefix)],
+      ["remove", "Remove", recipe.stages.length === 1, () => removeStage(index, prefix)],
+    ]) {
+      const button = testNode("button", "stage-action", label); button.type = "button"; button.id = `${prefix}stage-${index}-${name}`;
+      button.dataset.limitDisabled = String(limited); button.setAttribute("aria-label", `${label} stage ${index + 1}`);
+      button.addEventListener("click", callback); actions.appendChild(button);
+    }
+    card.appendChild(actions);
+    const parameters = testNode("div", "stage-parameters");
+    for (const [key, spec] of Object.entries(stageSpecs[stage.type].fields)) {
+      const input = testNode("input"), label = testNode("label", "runtime-control");
+      input.id = `${prefix}stage-${index}-${key}`; input.type = "number";
+      input.min = spec.min; input.max = spec.max; input.step = spec.step; input.value = Number.isNaN(stage.params[key]) ? "" : stage.params[key];
+      input.inputMode = spec.integer ? "numeric" : "decimal";
+      label.htmlFor = input.id; label.appendChild(testNode("span", "", spec.label)); label.appendChild(input);
+      input.addEventListener("input", () => {
+        setStageParameter(index, key, String(input.value).trim() === "" ? NaN : Number(input.value), prefix);
+        note.textContent = stageNote(recipeFor(prefix).stages[index]);
+      });
+      parameters.appendChild(label);
+    }
+    card.appendChild(parameters);
+    const note = testNode("p", "stage-note", stageNote(stage)); card.appendChild(note);
+    container.appendChild(card);
+  });
+  syncMethodControls(prefix);
+  if (focusId) $(focusId)?.focus();
+}
+function pipelineChanged(prefix = "", render = true, focusId = null) {
+  if (render) renderPipeline(prefix, focusId); else syncMethodControls(prefix);
+  if (prefix) { if (!recipeProblem(prefix)) dialogMessage(); }
+  else { if (!recipeProblem()) persistLiveSettings(); updateCards(); }
+}
+function addStage(type, prefix = "") {
+  const recipe = recipeFor(prefix);
+  if (state.busy || state.initializing || (prefix && !state.settingsDraft) || recipe.stages.length >= 8 || !Object.hasOwn(stageSpecs, type)) return;
+  recipe.stages.push(newStage(type)); pipelineChanged(prefix, true, `${prefix}stage-${recipe.stages.length - 1}-type`);
+}
+function removeStage(index, prefix = "") {
+  const recipe = recipeFor(prefix);
+  if (state.busy || state.initializing || (prefix && !state.settingsDraft) || recipe.stages.length <= 1 || !recipe.stages[index]) return;
+  recipe.stages.splice(index, 1); pipelineChanged(prefix, true, `${prefix}stage-${Math.min(index, recipe.stages.length - 1)}-type`);
+}
+function moveStage(index, direction, prefix = "") {
+  const recipe = recipeFor(prefix), next = index + direction;
+  if (state.busy || state.initializing || (prefix && !state.settingsDraft) || ![-1, 1].includes(direction) || !recipe.stages[index] || !recipe.stages[next]) return;
+  [recipe.stages[index], recipe.stages[next]] = [recipe.stages[next], recipe.stages[index]];
+  pipelineChanged(prefix, true, `${prefix}stage-${next}-type`);
+}
+function changeStageType(index, type, prefix = "") {
+  const recipe = recipeFor(prefix);
+  if (state.busy || state.initializing || (prefix && !state.settingsDraft) || !recipe.stages[index] || !Object.hasOwn(stageSpecs, type)) return;
+  if (recipe.stages[index].type === type) return;
+  recipe.stages[index] = newStage(type); pipelineChanged(prefix, true, `${prefix}stage-${index}-type`);
+}
+function setStageParameter(index, key, value, prefix = "") {
+  const recipe = recipeFor(prefix), stage = recipe.stages[index];
+  if (state.busy || state.initializing || (prefix && !state.settingsDraft) || !stage || !Object.hasOwn(stageSpecs[stage.type].fields, key)) return;
+  stage.params[key] = value; pipelineChanged(prefix, false);
 }
 function updateCards() {
   syncMethodControls();
   syncMethodControls("dialog-");
   $("empty-state").hidden = Boolean(state.sourceImage);
   $("processing-feedback").hidden = !state.busy;
-  $("process-button").disabled = state.busy || state.uploading || state.initializing || !state.ready || !state.uploadedSource || Boolean(methodProblem($("method-select").value));
-  $("process-button").title = methodProblem($("method-select").value) || "Protect the uploaded photo";
+  $("process-button").disabled = state.busy || state.uploading || state.initializing || !state.ready || !state.uploadedSource || Boolean(methodProblem(state.pipeline) || recipeProblem());
+  $("process-button").title = methodProblem(state.pipeline) || recipeProblem() || "Protect the uploaded photo";
   $("upload-button").disabled = state.busy || state.initializing;
   $("file-input").disabled = state.busy || state.initializing;
   $("settings-button").disabled = state.busy || state.initializing;
@@ -139,6 +222,7 @@ function updateCards() {
   $("export-stage1-button").hidden = !state.stage1;
   $("export-stage1-button").disabled = state.busy || state.uploading || !state.stage1;
   $("reset-button").disabled = state.busy || state.initializing;
+  updateIntermediateExports();
   document.querySelectorAll(".mode-tabs [data-mode]").forEach((button) => {
     button.disabled = button.dataset.mode !== "original" && !state.result;
     button.classList.toggle("active", button.dataset.mode === state.mode);
@@ -427,6 +511,7 @@ async function useSource(asset, originalUpload = true, uploadToken = null) {
   state.source = asset;
   state.sourceImage = image;
   state.result = state.resultImage = state.stage1 = null;
+  state.intermediateAssets = [];
   invalidateDiff();
   setMetrics(null);
   setMode("original");
@@ -645,30 +730,46 @@ function setupCanvas() {
   new ResizeObserver(requestDraw).observe(viewport);
 }
 
+function validateNumber(number, name, spec) {
+  if (typeof number !== "number" || !Number.isFinite(number) || number < spec.min || number > spec.max || (spec.integer && !Number.isInteger(number))) {
+    throw new Error(`${name}: choose ${spec.integer ? "a whole number" : "a number"} between ${spec.min} and ${spec.max}.`);
+  }
+  if (spec.multiple && number % spec.multiple !== 0) throw new Error(`${name}: use a multiple of ${spec.multiple}.`);
+  return number;
+}
 function normalizedSettings(value = {}, legacy = false) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid settings.");
-  const mode = value.mode ?? (legacy ? "faceshield" : defaults.mode);
-  if (!Object.hasOwn(methodLabels, mode)) throw new Error("Choose a supported protection method.");
-  const rules = { phantom_iterations: [10, 2000, true], max_size: [128, 1280, true], iterations: [10, 100, true], noise_clamp: [1, 32, true], step_size: [0.25, 4, false], nullswap_strength: [0, 4, false], nullswap_seed: [0, 4294967295, true] };
-  const result = { mode };
-  for (const [name, [low, high, integer]] of Object.entries(rules)) {
-    const number = value[name] ?? defaults[name];
-    if (typeof number !== "number" || !Number.isFinite(number) || number < low || number > high || (integer && !Number.isInteger(number))) {
-      throw new Error(`${name.replaceAll("_", " ")}: choose ${integer ? "a whole number" : "a number"} between ${low} and ${high}.`);
-    }
-    result[name] = number;
+  const mode = value.mode ?? (legacy ? "faceshield" : "custom");
+  if (typeof mode !== "string" || !Object.hasOwn(methodLabels, mode)) throw new Error("Choose a supported protection method.");
+  let stages = value.stages;
+  if (mode !== "custom") {
+    const types = mode === "phantomseal_faceshield" ? ["phantomseal", "faceshield"] : [mode];
+    stages = types.map(type => {
+      const names = type === "phantomseal" ? { iterations: "phantom_iterations" } : type === "nullswap" ? { strength: "nullswap_strength", seed: "nullswap_seed" } : { iterations: "iterations", noise_clamp: "noise_clamp", step_size: "step_size", analysis_size: "analysis_size" };
+      return { type, params: Object.fromEntries(Object.entries(names).filter(([, old]) => Object.hasOwn(value, old)).map(([key, old]) => [key, value[old]])) };
+    });
+  } else if (stages === undefined && value.mode === undefined) stages = defaults.stages;
+  if (!Array.isArray(stages) || stages.length < 1 || stages.length > 8) throw new Error("Choose between 1 and 8 pipeline stages.");
+  const result = { mode: "custom", max_size: validateNumber(value.max_size ?? 1280, "Maximum long edge", {min:128,max:1280,integer:true}), stages: [] };
+  for (const [index, stage] of stages.entries()) {
+    if (!stage || typeof stage !== "object" || Array.isArray(stage) || typeof stage.type !== "string" || !Object.hasOwn(stageSpecs, stage.type)) throw new Error(`Stage ${index + 1}: choose a supported filter.`);
+    if (Object.keys(stage).some(key => !["type", "params"].includes(key))) throw new Error(`Stage ${index + 1}: unknown stage fields.`);
+    const params = stage.params === undefined ? {} : stage.params;
+    if (!params || typeof params !== "object" || Array.isArray(params)) throw new Error(`Stage ${index + 1}: invalid parameters.`);
+    const spec = stageSpecs[stage.type];
+    for (const key of Object.keys(params)) if (!Object.hasOwn(spec.fields, key)) throw new Error(`Stage ${index + 1}: unsupported parameter ${key}.`);
+    const normalized = {};
+    for (const [key, field] of Object.entries(spec.fields)) normalized[key] = validateNumber(Object.hasOwn(params, key) ? params[key] : field.value, `Stage ${index + 1} ${field.label}`, field);
+    result.stages.push({ type: stage.type, params: normalized });
   }
   return result;
 }
-
 function numericFieldValue(id) { return String($(id).value).trim() === "" ? NaN : Number($(id).value); }
-function settings() { return normalizedSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, numericFieldValue(id)])), mode: $("method-select").value }); }
+function settings() { return normalizedSettings({ ...state.pipeline, max_size: numericFieldValue("max-size") }); }
 function applySettings(value, legacy = false) {
-  const params = normalizedSettings(value, legacy);
-  $("method-select").value = params.mode;
-  for (const [key, id] of Object.entries(fields)) $(id).value = params[key];
-  refreshControlValues();
-  updateCards();
+  state.pipeline = normalizedSettings(value, legacy);
+  $("max-size").value = state.pipeline.max_size;
+  renderPipeline(); refreshControlValues(); updateCards();
 }
 function persistLiveSettings() {
   try { localStorage.setItem("faceshield.settings.v1", JSON.stringify(settings())); }
@@ -676,34 +777,29 @@ function persistLiveSettings() {
 }
 function refreshControlValues() {
   syncMethodControls();
-  setText("phantom-iterations-value", $("phantom-iterations").value);
-  setText("iterations-value", $("iterations").value);
-  setText("noise-clamp-value", $("noise-clamp").value);
-  setText("step-size-value", Number($("step-size").value).toFixed(2));
   setText("max-size-value", `${$("max-size").value} px`);
   setText("diff-gain-value", `×${$("diff-gain").value}`);
   document.querySelectorAll('input[type="range"]').forEach((range) => {
     range.style.setProperty("--range-progress", `${100 * (Number(range.value) - Number(range.min)) / (Number(range.max) - Number(range.min))}%`);
   });
 }
-
-function readDialogSettings() { return normalizedSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, numericFieldValue(`dialog-${id}`)])), mode: $("dialog-method-select").value }); }
+function readDialogSettings() { return normalizedSettings({ ...state.settingsDraft, max_size: numericFieldValue("dialog-max-size") }); }
 function dialogMessage(message = "") { $("settings-message").textContent = message; $("settings-message").hidden = !message; }
 function renderSettingsDialog() {
   if (!state.settingsDraft) return;
-  $("dialog-method-select").value = state.settingsDraft.mode;
-  for (const [key, id] of Object.entries(fields)) $(`dialog-${id}`).value = state.settingsDraft[key];
-  syncMethodControls("dialog-");
-  dialogMessage(); updatePresetButtons();
+  $("dialog-max-size").value = state.settingsDraft.max_size;
+  renderPipeline("dialog-"); dialogMessage(); updatePresetButtons();
 }
 function openSettingsDialog() {
   if (state.busy || state.initializing) return;
-  state.settingsDraft = settings();
+  state.settingsDraft = copyRecipe(state.pipeline);
+  state.settingsDraft.max_size = numericFieldValue("max-size");
   $("preset-name").value = "";
   renderPresets(""); renderSettingsDialog(); $("settings-dialog").showModal();
 }
 function closeSettingsDialog() { $("settings-dialog").close(); state.settingsDraft = null; dialogMessage(); updatePresetButtons(); }
 function saveSettingsDialog() {
+  if (state.busy || state.initializing || !state.settingsDraft) return;
   try { applySettings(readDialogSettings()); persistLiveSettings(); closeSettingsDialog(); toast("Settings saved"); }
   catch (error) { dialogMessage(error.message); }
 }
@@ -782,9 +878,9 @@ async function processImage() {
   const sourceId = state.uploadedSource.id;
   try {
     const params = settings();
-    const unavailable = methodProblem(params.mode);
+    const unavailable = methodProblem(params);
     if (unavailable) throw new Error(unavailable);
-    invalidateTest(); state.stage1 = null; busy(true); $("result-summary").hidden = true;
+    invalidateTest(); state.stage1 = null; state.intermediateAssets = []; busy(true); $("result-summary").hidden = true;
     $("progress-bar").value = 0; setText("progress-label", "Preparing");
     setText("live-status", "Loading models. The first run takes longer…");
     const job = await api("/api/process", { source_id: sourceId, params });
@@ -822,6 +918,7 @@ async function watchJob(id, expectedSource = null, firstJob = null) {
       await useResult(job.result, job.metrics);
       state.testableResultIds.add(job.result.id);
       state.stage1 = job.stage1 || null;
+      state.intermediateAssets = validIntermediateAssets(job.intermediate_assets);
       setMode("split"); persistSelection();
       setText("result-summary", `${methodLabels[job.params?.mode || job.method] || "Protection complete"} · ${dimensions(job.result)} px · ${Number(job.elapsed || 0).toFixed(1)} s`);
       $("result-summary").hidden = false; toast("Photo protected"); return;
@@ -846,6 +943,21 @@ async function download() {
     if (asset) downloadUrl(asset.url, asset.name.replace(/\.[^.]+$/, "") + ".png");
   }
 }
+function validIntermediateAssets(value) {
+  return (Array.isArray(value) ? value : []).filter(item => item && Number.isInteger(item.index) && item.index >= 1 && item.index <= 8 && Object.hasOwn(stageSpecs, item.type) && typeof item.asset?.id === "string" && typeof item.asset?.name === "string" && testAssetUrl(item.asset));
+}
+function updateIntermediateExports() {
+  const select = $("stage-output-select"), selected = select.value;
+  $("stage-output-controls").hidden = state.intermediateAssets.length === 0;
+  select.replaceChildren(...state.intermediateAssets.map(item => new Option(`${item.index}. ${stageSpecs[item.type].label}${item.asset.id === state.result?.id ? " · Final" : ""}`, String(item.index))));
+  select.value = state.intermediateAssets.some(item => String(item.index) === selected) ? selected : String(state.intermediateAssets[0]?.index || "");
+  select.disabled = $("export-stage-button").disabled = state.busy || state.uploading || !state.intermediateAssets.length;
+}
+function downloadIntermediate() {
+  if (state.busy || state.uploading) return;
+  const item = state.intermediateAssets.find(stage => String(stage.index) === $("stage-output-select").value);
+  if (item) downloadUrl(item.asset.url, item.asset.name.replace(/\.[^.]+$/, "") + ".png");
+}
 function downloadStage1() {
   if (state.busy || state.uploading || !state.stage1) return;
   downloadUrl(state.stage1.url, state.stage1.name.replace(/\.[^.]+$/, "") + ".png");
@@ -867,6 +979,7 @@ function bindEvents() {
   $("zoom-in").addEventListener("click", () => zoomBy(1.25)); $("zoom-out").addEventListener("click", () => zoomBy(0.8));
   $("fit-button").addEventListener("click", resetView); $("export-button").addEventListener("click", download);
   $("export-stage1-button").addEventListener("click", downloadStage1);
+  $("export-stage-button").addEventListener("click", downloadIntermediate);
   $("test-protection-button").addEventListener("click", openTestDialog);
   $("run-test-button").addEventListener("click", startProtectionTest);
   $("test-backend").addEventListener("change", changeTestBackend);
@@ -880,16 +993,15 @@ function bindEvents() {
   });
   $("process-button").addEventListener("click", processImage);
   $("settings-form").addEventListener("submit", (event) => { event.preventDefault(); processImage(); });
-  for (const id of Object.values(fields)) $(id).addEventListener("input", () => { refreshControlValues(); persistLiveSettings(); });
-  $("method-select").addEventListener("change", () => { refreshControlValues(); persistLiveSettings(); updateCards(); });
+  $("max-size").addEventListener("input", () => { state.pipeline.max_size = numericFieldValue("max-size"); refreshControlValues(); if (!recipeProblem()) persistLiveSettings(); updateCards(); });
+  for (const prefix of ["", "dialog-"]) $(`${prefix}add-stage`).addEventListener("click", () => addStage($(`${prefix}add-stage-type`).value, prefix));
   $("reset-button").addEventListener("click", () => { applySettings(defaults); persistLiveSettings(); toast("Parameters reset"); });
   $("diff-gain").addEventListener("input", () => { refreshControlValues(); requestDraw(); }); $("diff-channel").addEventListener("change", requestDraw);
   $("settings-button").addEventListener("click", openSettingsDialog);
   for (const id of ["close-settings", "cancel-settings"]) $(id).addEventListener("click", closeSettingsDialog);
   $("save-settings").addEventListener("click", saveSettingsDialog);
   $("preset-select").addEventListener("change", selectPreset); $("save-preset").addEventListener("click", savePreset); $("delete-preset").addEventListener("click", deletePreset);
-  for (const id of Object.values(fields)) $(`dialog-${id}`).addEventListener("input", () => { syncMethodControls("dialog-"); try { state.settingsDraft = readDialogSettings(); dialogMessage(); } catch (error) { dialogMessage(error.message); } });
-  $("dialog-method-select").addEventListener("change", () => { syncMethodControls("dialog-"); try { state.settingsDraft = readDialogSettings(); dialogMessage(); } catch (error) { dialogMessage(error.message); } });
+  $("dialog-max-size").addEventListener("input", () => { if (state.settingsDraft) state.settingsDraft.max_size = numericFieldValue("dialog-max-size"); syncMethodControls("dialog-"); });
   $("settings-dialog").addEventListener("cancel", (event) => { event.preventDefault(); closeSettingsDialog(); });
   $("settings-dialog").addEventListener("close", () => { state.settingsDraft = null; updatePresetButtons(); });
   $("settings-dialog").addEventListener("click", (event) => {
@@ -924,10 +1036,12 @@ async function restoreSelection(uploadToken = state.uploadVersion) {
     if (!await useSource(saved.source, false, uploadToken)) return;
     if (saved.result) { await useResult(saved.result); setMode("split"); }
     state.stage1 = saved.stage1 && valid(saved.stage1) && state.assetIndex.has(saved.stage1.id) ? saved.stage1 : null;
+    state.intermediateAssets = validIntermediateAssets(saved.intermediateAssets).filter(item => state.assetIndex.has(item.asset.id));
     updateCards(); persistSelection();
   } catch {
     if (uploadToken !== state.uploadVersion) return;
     state.uploadedSource = state.source = state.result = state.stage1 = state.sourceImage = state.resultImage = null;
+    state.intermediateAssets = [];
     try { localStorage.removeItem("faceshield.selection.v1"); } catch { /* Optional. */ }
     toast("Previous photo is no longer available. Open it again."); updateCards();
   }

@@ -128,6 +128,19 @@ class ProtectionTestRunnerTests(unittest.TestCase):
                 self.assertIn("NullSwap", result["conditions"][0]["rows"][-1]["label"])
                 self.assertEqual(self.calls[-1]["reference"], self.paths["clean"])
 
+    def test_custom_pipeline_compares_original_with_complete_final_in_each_condition(self):
+        result = run_protection_test(root_dir=self.root, output_dir=self.root / "custom",
+            source_path=self.paths["clean"], result_path=self.paths["final"],
+            mode="custom", benchmark_runner=self.benchmark, models_context=self.models)
+        self.assertEqual([condition["name"] for condition in result["conditions"]], ["png", "jpeg95"])
+        for condition, call in zip(result["conditions"], self.calls):
+            self.assertEqual([row["key"] for row in condition["rows"]], ["clean", "final"])
+            self.assertEqual(condition["rows"][-1]["label"], "Custom pipeline")
+            self.assertIsNone(condition["delta_final_minus_stage1"])
+            self.assertEqual(call["stage1"], call["final"])
+            self.assertEqual(call["reference"], self.paths["clean"])
+        self.assertEqual(self.events, ["load", "close"])
+
     def test_invalid_backend_rejected_before_loading_models(self):
         for backend in ("bad", "../simswap", True, None, []):
             with self.subTest(backend=backend), self.assertRaises(ValueError):

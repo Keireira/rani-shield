@@ -1,6 +1,6 @@
 # NullSwap and additional face-swap tests
 
-Rani Shield supports **NullSwap as a separate protection mode**, and **DiffSwap,
+Rani Shield supports **NullSwap as an independent protection filter**, and **DiffSwap,
 InfoSwap and UniFace as selectable result-test backends**, alongside SimSwap.
 Choosing another test backend generates another real face swap; it does not add
 another protection layer to the photograph.
@@ -51,19 +51,21 @@ Rani Shield detects the largest clear face, aligns it to 256px, evaluates that
 network and maps the actual `protected_face - clean_face` residual back to the
 photograph. The output retains its aspect ratio, with a maximum 1280px long edge
 and no enlargement of smaller inputs. Pixels outside the transformed face crop
-remain unchanged. The **NullSwap seed** control selects the random noise (integer
+remain unchanged. Each NullSwap stage's **Seed** control selects the random noise (integer
 0–4294967295, default **0**). Reusing it reproduces the noise on the same runtime/device.
 
-**NullSwap strength** scales the residual after mapping it to the photograph.
+**Perturbation strength** scales the residual after mapping it to the photograph.
 Its range is **0–4**, default **1**, with UI increments of 0.25. At the default,
 the original **8/255** pixel bound and output are preserved. Strength 2 gives
-a bound of 16/255; strength 0 preserves the normalized original pixels.
+a bound of 16/255; strength 0 preserves that stage's input pixels.
 The 8-bit PNG rounds the result; the maximum integer pixel change is bounded
 by `ceil(8 × strength)`. This scales the generated residual, without changing
 the checkpoint's native epsilon or rerunning optimization.
 
-Both controls are available in the sidebar and Settings, enabled only for
-NullSwap, and included in saved presets. Old settings default to strength 1
+Both controls are available on each NullSwap card in the sidebar and Settings,
+and included in saved presets. Repeat NullSwap in a pipeline to choose independent
+values at different positions. Each bound is relative to that stage's input;
+changes across the full recipe accumulate. Old settings default to strength 1
 and seed 0. Increasing strength can increase visible distortion and does not
 guarantee stronger protection. PhantomSeal's metric-only gain 2.75 is not
 applied automatically. Metadata records the chosen gain/seed, native bound,

@@ -405,3 +405,31 @@ body[data-busy=true] #process-button { cursor: wait; }
   .test-quality-setting { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .test-result-context { flex-direction: column; }
 }
+
+/* Ordered protection recipe; each card owns its parameters. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.pipeline-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 18px 0 8px; }
+.pipeline-count { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.pipeline-stages { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.pipeline-stage { background: #1b1b1b; border: 1px solid #454545; border-radius: 5px; padding: 12px; }
+.pipeline-stage-heading { display: flex; align-items: center; gap: 10px; }
+.stage-number { font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.stage-type { min-width: 0; flex: 1; }
+.stage-actions { display: flex; gap: 5px; margin: 10px 0 14px; }
+.stage-action { background: transparent; border: 1px solid #555; border-radius: 3px; padding: 4px 7px; font-size: 11px; }
+.stage-action:last-child { margin-left: auto; }
+.stage-parameters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 10px; }
+.stage-parameters .runtime-control { min-width: 0; font-size: 12px; }
+.stage-parameters input[type=number] { width: 100%; min-width: 0; height: 35px; padding: 6px 8px; color: #e8e8e8; background: #242424; border: 1px solid #666; border-radius: 3px; }
+.stage-note { font-size: 11px; line-height: 1.5; color: #aaa; margin-top: 12px; }
+.add-stage-controls { display: flex; gap: 8px; margin-top: 12px; }
+.add-stage-controls select { min-width: 0; flex: 1; }
+.add-stage-controls .button { width: auto; flex: 0 0 auto; white-space: nowrap; padding: 8px 10px; font-size: 12px; }
+.pipeline-error { margin-top: 10px; color: #ffad9a; font-size: 12px; }
+.dialog-parameters .pipeline-heading, .dialog-parameters .pipeline-stages, .dialog-parameters .add-stage-controls { margin-top: 0; }
+.dialog-parameters { gap: 12px; }
+.stage-output-controls { margin-top: 12px; }
+.stage-output-row { display: flex; gap: 7px; }
+.stage-output-row select { flex: 1; min-width: 0; }
+.stage-output-row .button { width: auto; flex: 0 0 auto; white-space: nowrap; padding: 7px 9px; font-size: 11px; }
+.pipeline-heading + .card-description { margin: 0; }

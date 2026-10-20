@@ -115,7 +115,9 @@ The integrated runtime uses explicit local weight paths. Resource caches belong 
 
 ## Processing and memory
 
-The pipeline applies EXIF orientation, converts the input to RGB and normalizes dimensions once using `min(1, max_size / long_edge)`. `max_size` ranges from 128 to 1280. The original normalized PNG is saved before either defense and remains the image-quality and identity reference. There is no resize between protection stages.
+The pipeline applies EXIF orientation, converts the input to RGB and normalizes dimensions once using `min(1, max_size / long_edge)`. `max_size` ranges from 128 to 1280. The original normalized PNG is saved before the first defense and remains the image-quality and identity reference. There is no resize between protection stages.
+
+The editor submits `mode: "custom"` with an ordered `stages` recipe of 1–8 entries. Repeated types are supported; each entry owns its parameters and a distinct output directory. Every stage is validated before work begins, runs against the previous output, and releases its model before the next stage loads. Geometry is checked after every stage. Progress describes the stage number and filter. The legacy fixed modes and flat parameters remain accepted for older clients and benchmarks.
 
 PhantomSeal maintains the output-resolution perturbation and differentiably samples a fixed aligned 256 × 256 view of the largest detected face. Every optimization step uses these frozen branches:
 
@@ -134,7 +136,7 @@ FaceShield uses frozen evaluation models, sequential perturbation gradients and 
 
 `protector.py` is the maintained FaceShield runtime and CLI. The original Linux/distributed training-era launch scripts are outside the active application; consult the [historical upstream README](UPSTREAM_README.md) and upstream repository for that research setup.
 
-Only feature encoders needed by PhantomSeal's objective are loaded. FaceShifter/HifiFace synthesis generators, discriminators, Lightning training modules and the BFM renderer are unnecessary for those feature losses. The two defense engines release GPU models between stages. The SimSwap test generator is loaded for testing, not retained alongside a running protection job.
+Only feature encoders needed by PhantomSeal's objective are loaded. FaceShifter/HifiFace synthesis generators, discriminators, Lightning training modules and the BFM renderer are unnecessary for those feature losses. Defense engines release GPU models between stages. The SimSwap test generator is loaded for testing, not retained alongside a running protection job.
 
 The default PhantomSeal RGB bounds are approximately `19.1 / 7.7 / 19.1` out of 255. FaceShield's default limit of 12 applies relative to the stage-one image. The chain can therefore reach approximately `31 / 20 / 31` relative to the clean image. Comparing the defaults is a product-settings comparison, **not a matched-distortion ablation**. Metadata records measured total changes and stage timings.
 
@@ -153,6 +155,27 @@ The default PhantomSeal RGB bounds are approximately `19.1 / 7.7 / 19.1` out of 
 | `GET /api/pixels/{id}` | Registered image as raw RGBA bytes for the browser's exact difference view |
 
 `GET /api/status` and `/api/jobs/{id}` remain compatibility aliases. Errors use `{error: "..."}`. Concurrent GPU work returns HTTP 409. Asset URLs resolve only registered IDs; there is no arbitrary-path file endpoint.
+
+A custom processing request uses this shape:
+
+```json
+{
+  "source_id": "registered-upload-id",
+  "params": {
+    "mode": "custom",
+    "max_size": 1280,
+    "stages": [
+      {"type": "nullswap", "params": {"strength": 1, "seed": 0}},
+      {"type": "faceshield", "params": {"iterations": 30, "noise_clamp": 12, "step_size": 1, "analysis_size": 512}},
+      {"type": "nullswap", "params": {"strength": 0.5, "seed": 42}}
+    ]
+  }
+}
+```
+
+PhantomSeal stages use `{"type": "phantomseal", "params": {"iterations": 1000}}`. Omitted stage parameters receive that filter's defaults. Empty/oversized recipes, unknown types or stage fields, invalid numeric values and parameters belonging to another filter are rejected. A legacy mode cannot also supply `stages`.
+
+Custom completion includes the normalized `pipeline` recipe in metadata and `intermediate_assets` entries with `index`, `type`, `label`, registered `asset` and `params`. These allow stage downloads without exposing arbitrary file paths. A custom result test publishes clean/final comparisons for the complete recipe; legacy chain tests retain their separate PhantomSeal row.
 
 Protection completion returns the clean normalized `source`, optional `stage1`, final `result` and metrics. Test jobs have `kind: "test"` and `result_id`, and never overwrite the main editor assets. Startup checks the active job kind before resuming polling. A test may continue while its modal is closed; its result belongs to the exact completed protection result, not whichever settings are currently selected.
 

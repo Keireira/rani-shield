@@ -41,9 +41,19 @@ A [Russian quick start](QUICKSTART.md) and [Windows troubleshooting guide](WINDO
 ## Protect and inspect a photo
 
 1. Use **Open image** or drag in a photo.
-2. Select a method and settings, then choose **Protect photo**.
+2. Build an ordered pipeline, set each filter's parameters, then choose **Protect photo**.
 3. Inspect **Original**, **Slider**, **Side by side**, **Result** or **Diff**. Pan, zoom and **Fit** affect only the view.
-4. Choose **Export PNG**. Original mode exports the original; Diff exports the full-resolution pixel difference; the other modes export the protected result. The PhantomSeal intermediate has a separate export action.
+4. Choose **Export PNG**. Original mode exports the original; Diff exports the full-resolution pixel difference; the other modes export the protected result. Stage outputs can also be downloaded separately.
+
+The **Pipeline** builder applies filters from top to bottom. Add NullSwap, PhantomSeal or FaceShield, move stages up/down, or remove them. A pipeline contains **1–8 stages**; the same filter can appear more than once with independent parameters. For example, `NullSwap → FaceShield → NullSwap` can use different seeds for the two NullSwap stages. The default remains PhantomSeal followed by FaceShield.
+
+| Filter | Parameters (default) |
+|---|---|
+| NullSwap | Strength 0–4 (**1**); seed 0–4294967295 (**0**) |
+| PhantomSeal | Steps 10–2000 (**1000**) |
+| FaceShield | Steps 1–200 (**30**); noise limit 1–32 (**12**); step size 0.25–4 (**1**); analysis size 64–1280, a multiple of 64 (**512**) |
+
+Maximum output size applies to the whole pipeline. Each stage receives the previous stage's output, and its perturbation limit is relative to that input. Pixel comparison always uses the clean normalized original, so accumulated changes can exceed an individual stage's limit. More stages do not establish better protection. Settings and named presets save the complete ordered recipe; old presets retain their original methods and values.
 
 | Method | Processing |
 |---|---|
@@ -52,13 +62,15 @@ A [Russian quick start](QUICKSTART.md) and [Windows troubleshooting guide](WINDO
 | FaceShield only | Adapted diffusion, image-prompt and identity objectives from KUAICV FaceShield |
 | NullSwap · reconstruction | Feed-forward PhantomSeal reconstruction; native aligned 256px residual mapped to the full image, adjustable strength and seed; defaults remain gain 1, seed 0 and at most 8/255 pixel change |
 
-The output preserves aspect ratio and limits the long edge to the selected size, up to **1280 px**. Smaller inputs are not enlarged. PhantomSeal and FaceShield optimize their perturbations at the output resolution, with a differentiable 256 px aligned face view for PhantomSeal and a 512 px diffusion view for FaceShield. The two stages do not resize the image between them.
+The output preserves aspect ratio and limits the long edge to the selected size, up to **1280 px**. Smaller inputs are not enlarged. PhantomSeal and FaceShield optimize their perturbations at the output resolution, with a differentiable 256 px aligned face view for PhantomSeal and a configurable diffusion view for FaceShield (512 px by default). There is no resizing between stages; FaceShield's analysis size controls its internal model view.
 
 The editor serializes GPU jobs and releases model resources between stages. Uploads and generated files stay in `results/editor/`. Its asset registry is held in memory, so restarting the server may require uploading the photo again even when old PNG files remain on disk.
 
 ## Test the protection result
 
 **Test protection** copies the source identity into one of three public demo target faces with the selected **SimSwap, DiffSwap, InfoSwap or UniFace** model. The target supplies the destination face and pose; it is not the uploaded person. The panel shows the original, the target, the **Unprotected swap**, and swaps made from the protected variants. JPEG95 optionally repeats the comparison after compression.
+
+For a constructed pipeline, testing compares the clean source with the **final complete pipeline result**. Downloadable intermediate PNGs are not independently ranked by that test.
 
 Check the **Unprotected swap** first. If that face does not visibly resemble the original, it is a weak test of protection. For each condition:
 

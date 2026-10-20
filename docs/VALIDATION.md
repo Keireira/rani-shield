@@ -4,6 +4,13 @@
 
 The original comparison evidence was collected on 20 October 2026; later regression checks are dated below. Versioned, sanitized measurements are in [six-source.json](evidence/six-source.json) and [resolution1280.json](evidence/resolution1280.json). Full public reports, when retained locally, are under `results/benchmarks/2026-10-20-full/` and its `resolution1280/` subdirectory; those HTML/image bundles are ignored runtime artifacts. Private user-photo tests are not part of this evidence set.
 
+## Ordered pipeline builder — 2026-10-21
+
+- The complete Python suite passed: **179 tests**, run with the project-local interpreter. This run used the Windows temporary volume with 8.3 aliases available, so both short-path tests executed. Frontend regressions passed for ordering, repeated filters, parameter validation, legacy preset migration, draft cancellation, readiness, busy state and intermediate downloads.
+- A real **1280×1280** custom pipeline ran in **33.03 seconds**: NullSwap (strength 1, seed 0) → FaceShield (1 step, limit 4) → PhantomSeal (10 steps) → NullSwap (strength 0.5, seed 42). All four output dimensions and recipes matched, intermediate files were distinct, and progress was monotonic. The first NullSwap stage matched its previous default pixels exactly.
+- A real SimSwap test produced four published clean/final swap outputs across PNG/JPEG95 using the new custom mode. The reduced steps and enlarged public portrait verify execution, not protection effectiveness. [Machine-readable evidence](evidence/custom-pipeline-verification.json) records the recipe and measurements.
+- No HTTP server was started or restarted. Network connections were blocked during GPU verification. Browser rendering was not visually verified; frontend behavior was exercised through the DOM regression harness.
+
 ## Foreground launcher — 2026-10-21
 
 - `manage.cmd test`: **165 Python tests discovered, 163 passed, 2 skipped**, plus passing management, foreground-process and frontend checks. The skips still require unavailable Windows 8.3 aliases.

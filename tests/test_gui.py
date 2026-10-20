@@ -53,6 +53,14 @@ class FakeProtector:
             current = result.getpixel((0, 0))
             result.putpixel((0, 0), (current[0] + 1, current[1], current[2]))
             stages.append({"method": "faceshield", "max_pixel_change": 1})
+        if mode == "custom":
+            for index, recipe in enumerate(kwargs["stages"], start=1):
+                current = result.getpixel((0, 0))
+                result.putpixel((0, 0), (current[0] + index, current[1], current[2]))
+                stage_path = output / f"stage_{index}.png"
+                result.save(stage_path)
+                stages.append({"index": index, "type": recipe["type"], "params": recipe["params"],
+                               "name": recipe["type"], "output_path": str(stage_path)})
         result.save(output / "protected.png")
         progress(1.0, "Saved")
         return {"source_path": str(output / "source.png"), "output_path": str(output / "protected.png"),
@@ -490,6 +498,95 @@ class EditorAPITests(unittest.TestCase):
                 self.assertEqual(response.status_code, 400, response.text)
         self.assertEqual(self.factory_calls, 0)
         self.assertIsNone(self.studio.active)
+
+    def test_custom_pipeline_forwards_order_repeats_and_registers_stage_images(self):
+        original = self.upload()
+        stages = [{"type": "nullswap", "params": {"strength": 2.75, "seed": 17}},
+                  {"type": "faceshield", "params": {"iterations": 4, "noise_clamp": 3, "step_size": .5,
+                                                        "analysis_size": 256}},
+                  {"type": "nullswap", "params": {"strength": .25, "seed": 42}}]
+        response = self.client.post("/api/process", json={"source_id": original["id"],
+            "params": {"mode": "custom", "stages": stages}})
+        self.assertEqual(response.status_code, 202, response.text)
+        job = self.wait_job(response.json()["id"])
+        self.assertEqual(job["status"], "done", job.get("error"))
+        self.assertEqual(self.protection_calls[-1]["stages"], stages)
+        self.assertEqual(job["params"]["stages"], stages)
+        self.assertEqual(job["method"], "custom")
+        self.assertIsNone(job["stage1"])
+        for index, (item, recipe) in enumerate(zip(job["intermediate_assets"], stages), start=1):
+            self.assertEqual(item["index"], index)
+            self.assertEqual(item["type"], recipe["type"])
+            self.assertEqual(item["params"], recipe["params"])
+            self.assertEqual(self.client.get(item["asset"]["url"]).headers["content-type"], "image/png")
+        self.assertEqual(len(job["intermediate_assets"]), 3)
+        self.assertEqual(self.client.get(job["source"]["url"]).status_code, 200)
+        response = self.client.post("/api/test", json={"result_id": job["result"]["id"], "target_key": "cage"})
+        self.assertEqual(response.status_code, 202, response.text)
+        checked = self.wait_job(response.json()["id"])
+        self.assertEqual(checked["status"], "done", checked.get("error"))
+        self.assertIsNone(self.test_runner.calls[-1]["stage1_path"])
+        self.assertEqual(self.test_runner.calls[-1]["mode"], "custom")
+        for condition in checked["test"]["conditions"]:
+            self.assertEqual([row["key"] for row in condition["rows"]], ["clean", "final"])
+            self.assertIsNone(condition["delta_final_minus_stage1"])
+
+    def test_invalid_custom_recipe_is_rejected_before_enqueueing_or_loading_models(self):
+        original = self.upload()
+        invalid = [None, [], [{"type": "nullswap"}] * 9, [{"type": "unknown"}],
+                   [{"type": "nullswap", "params": {"strength": 4.25}}],
+                   [{"type": "nullswap", "params": {"seed": -.5}}],
+                   [{"type": "faceshield", "params": {"analysis_size": 500}}],
+                   [{"type": "phantomseal", "params": {"iterations": 9}}],
+                   [{"type": "faceshield", "params": {"seed": 0}}],
+                   [{"type": "nullswap", "output_path": "outside.png"}]]
+        for stages in invalid:
+            with self.subTest(stages=stages):
+                response = self.client.post("/api/process", json={"source_id": original["id"],
+                    "params": {"mode": "custom", "stages": stages}})
+                self.assertEqual(response.status_code, 400, response.text)
+        self.assertEqual(self.studio.jobs, {})
+        self.assertEqual(self.factory_calls, 0)
+        self.assertIsNone(self.studio.active)
+
+    def test_custom_readiness_checks_every_used_engine_and_ignores_unused_engines(self):
+        original = self.upload()
+        engines = {"nullswap": {"ready": True, "message": "Ready"},
+                   "faceshield": {"ready": False, "message": "Missing detector"},
+                   "phantomseal": {"ready": False, "message": "Missing cloak bank"}}
+        self.studio._readiness_provider = lambda root: engines
+        blocked = self.client.post("/api/process", json={"source_id": original["id"],
+            "params": {"mode": "custom", "stages": [{"type": "nullswap"}, {"type": "faceshield"}]}})
+        self.assertEqual(blocked.status_code, 503, blocked.text)
+        self.assertIn("FaceShield: Missing detector", blocked.json()["error"])
+        self.assertNotIn("cloak bank", blocked.json()["error"])
+        self.assertEqual(self.factory_calls, 0)
+        self.assertEqual(self.studio.jobs, {})
+        accepted = self.client.post("/api/process", json={"source_id": original["id"],
+            "params": {"mode": "custom", "stages": [{"type": "nullswap"}]}})
+        self.assertEqual(accepted.status_code, 202, accepted.text)
+        job = self.wait_job(accepted.json()["id"])
+        self.assertEqual(job["status"], "done", job.get("error"))
+        self.assertEqual(job["params"]["stages"], [{"type": "nullswap", "params": {"strength": 1, "seed": 0}}])
+
+    def test_custom_stage_cannot_publish_output_from_another_editor_job(self):
+        original = self.upload()
+        fake = FakeProtector(self.gate)
+        original_protect = fake.protect
+        def protect(*args, **kwargs):
+            report = original_protect(*args, **kwargs)
+            report["stages"][0]["output_path"] = str(self.studio.asset_path(original["id"]))
+            return report
+        fake.protect = protect
+        self.studio._protector = fake
+        with self.assertLogs("faceshield.editor", level="ERROR"):
+            response = self.client.post("/api/process", json={"source_id": original["id"],
+                "params": {"mode": "custom", "stages": [{"type": "nullswap"}]}})
+            job = self.wait_job(response.json()["id"])
+        self.assertEqual(job["status"], "error")
+        self.assertIn("job folder", job["error"])
+        self.assertIsNone(job["result"])
+        self.assertEqual(job["intermediate_assets"], [])
 
 
 if __name__ == "__main__":

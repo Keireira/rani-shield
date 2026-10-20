@@ -118,16 +118,18 @@ class Studio:
         with Image.open(self.asset_path(asset_id)) as image:
             return image.convert("RGBA")
 
-    def state(self):
+    def protection_readiness(self):
+        """Inspect files for the engines required by a recipe without loading models."""
         if self._readiness_provider is not None:
-            engines = self._readiness_provider(self.root)
-        elif self._protector_factory is not None:
-            engines = {name: {"ready": True, "message": "Injected test runtime is available."}
-                       for name in ("phantomseal", "faceshield", "nullswap")}
-        else:
-            # This helper only checks local files; it must not create GPU models.
-            from protection_pipeline import readiness
-            engines = readiness(self.root)
+            return self._readiness_provider(self.root)
+        if self._protector_factory is not None:
+            return {name: {"ready": True, "message": "Injected test runtime is available."}
+                    for name in ("phantomseal", "faceshield", "nullswap")}
+        from protection_pipeline import readiness
+        return readiness(self.root)
+
+    def state(self):
+        engines = self.protection_readiness()
         ready = any(engine.get("ready", False) for engine in engines.values())
         testing = self.testing_readiness()
         with self.lock:
@@ -201,10 +203,19 @@ class Studio:
         with self.lock:
             if self.active is not None:
                 raise APIError("Another image is being processed. Wait for it to finish.", 409)
+            required = ([stage["type"] for stage in params["stages"]] if params["mode"] == "custom"
+                        else ["phantomseal", "faceshield"] if params["mode"] == "phantomseal_faceshield"
+                        else [params["mode"]])
+            readiness = self.protection_readiness()
+            labels = {"phantomseal": "PhantomSeal", "faceshield": "FaceShield", "nullswap": "NullSwap"}
+            missing = [labels[name] + ": " + readiness.get(name, {}).get("message", "Runtime is unavailable.")
+                       for name in dict.fromkeys(required) if not readiness.get(name, {}).get("ready", False)]
+            if missing:
+                raise APIError("Protection pipeline is unavailable. " + "; ".join(missing), 503)
             job_id = secrets.token_hex(16)
             job = {"id": job_id, "kind": "protect", "status": "queued", "stage": "Queued", "progress": 0,
                    "elapsed": 0.0, "source_id": source["id"], "source": None, "result": None,
-                   "stage1": None, "method": params["mode"], "stages": [],
+                   "stage1": None, "method": params["mode"], "stages": [], "intermediate_assets": [],
                    "metrics": None, "error": None, "params": params, "_started": time.monotonic()}
             self.jobs[job_id] = job
             self.active = job_id
@@ -355,6 +366,27 @@ class Studio:
                                        f"{Path(original['name']).stem}_phantomseal.png")
                 if (source["width"], source["height"]) != (stage1["width"], stage1["height"]):
                     raise ValueError("The PhantomSeal output dimensions do not match the clean reference image.")
+            intermediate_assets = []
+            if params["mode"] == "custom":
+                if stage1 is not None:
+                    raise ValueError("A custom pipeline must not publish a legacy PhantomSeal intermediate.")
+                reported_stages = report.get("stages", [])
+                if len(reported_stages) != len(params["stages"]):
+                    raise ValueError("The pipeline returned an unexpected number of stages.")
+                folder = (self.store / "jobs" / job_id).resolve()
+                for index, (stage, requested) in enumerate(zip(reported_stages, params["stages"]), start=1):
+                    if stage.get("index") != index or stage.get("type") != requested["type"] or stage.get("params") != requested["params"]:
+                        raise ValueError("The pipeline returned a different stage recipe.")
+                    path = Path(stage["output_path"]).resolve()
+                    if not path.is_relative_to(folder):
+                        raise ValueError("Pipeline stage output must stay inside its editor-owned job folder.")
+                    label = str(stage.get("name", requested["type"]))
+                    asset = result if path == self.asset_path(result["id"]) else self.register(
+                        path, "intermediate", f"{Path(original['name']).stem}_stage_{index}_{requested['type']}.png")
+                    if (asset["width"], asset["height"]) != (source["width"], source["height"]):
+                        raise ValueError("A pipeline stage has different dimensions from the clean reference image.")
+                    intermediate_assets.append({"index": index, "type": requested["type"], "label": label,
+                                                "asset": asset, "params": dict(requested["params"])})
             update(stage="Comparing image pixels", progress=99)
             metrics = self.compare(source["id"], result["id"])
             performance = {key: value for key, value in report.items()
@@ -364,6 +396,7 @@ class Studio:
                 elapsed = round(time.monotonic() - self.jobs[job_id]["_started"], 1)
             update(status="done", stage="Done", progress=100, source=source, result=result, stage1=stage1,
                    method=report.get("method", params["mode"]), stages=report.get("stages", []),
+                   intermediate_assets=intermediate_assets,
                    metrics=metrics, performance=performance, elapsed=elapsed)
         except Exception as exc:
             LOGGER.exception("FaceShield job %s failed", job_id)

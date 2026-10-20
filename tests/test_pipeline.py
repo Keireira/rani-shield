@@ -32,8 +32,9 @@ class FakeEngine:
         with Image.open(input_path) as opened:
             source = opened.convert("RGB")
         owner.calls.append({"engine": self.name, "input_path": str(input_path),
-                            "size": source.size, "pixel": source.getpixel((0, 0)), **kwargs})
-        if owner.fail == self.name:
+                            "output_dir": str(output_dir), "size": source.size,
+                            "pixel": source.getpixel((0, 0)), **kwargs})
+        if owner.fail == self.name or owner.fail_at == len(owner.calls):
             raise RuntimeError(f"{self.name} failed")
         if self.name == "faceshield":
             source.thumbnail((kwargs["max_size"], kwargs["max_size"]), Image.Resampling.LANCZOS)
@@ -41,12 +42,15 @@ class FakeEngine:
             source = source.resize((source.width * 2, source.height * 2))
         change = np.asarray(owner.changes[self.name], dtype=np.int16)
         pixels = np.asarray(source).astype(np.int16)
-        result = np.clip(pixels + change, 0, 255).astype(np.uint8)
+        updated = owner.transforms[self.name](pixels) if self.name in owner.transforms else pixels + change
+        result = np.clip(updated, 0, 255).astype(np.uint8)
         folder = Path(output_dir)
         folder.mkdir(parents=True, exist_ok=True)
         source.save(folder / "source.png")
         output = folder / "protected.png"
         Image.fromarray(result).save(output)
+        for value in owner.progress_values:
+            progress(value, f"{self.name}: updating")
         progress(1, f"{self.name}: saved")
         return {"method": self.name, "source_path": str(folder / "source.png"),
                 "output_path": str(output), "max_pixel_change": int(np.abs(change).max()),
@@ -64,12 +68,15 @@ class PipelineTests(unittest.TestCase):
         self.input_path = self.root / "input.png"
         Image.new("RGB", (160, 80), (100, 110, 120)).save(self.input_path)
         self.events, self.calls, self.model_refs, self.engine_refs = [], [], [], []
-        self.changes = {"phantomseal": (2, 1, -2), "faceshield": (1, -1, 3)}
+        self.changes = {"phantomseal": (2, 1, -2), "faceshield": (1, -1, 3), "nullswap": (2, -3, 1)}
         self.fail = self.resize = None
+        self.fail_at = None
+        self.transforms, self.progress_values = {}, []
         self.job_number = 0
         self.pipeline = ProtectionPipeline(
             self.root, phantom_factory=lambda: FakeEngine(self, "phantomseal"),
-            shield_factory=lambda: FakeEngine(self, "faceshield"))
+            shield_factory=lambda: FakeEngine(self, "faceshield"),
+            nullswap_factory=lambda: FakeEngine(self, "nullswap"))
         self.release_patch = patch.object(pipeline_module, "release_gpu", side_effect=self.release)
         self.release_patch.start()
         self.addCleanup(self.release_patch.stop)
@@ -189,6 +196,90 @@ class PipelineTests(unittest.TestCase):
         for call in self.calls[1:]:
             self.assertNotIn("strength", call)
             self.assertNotIn("seed", call)
+
+    def test_custom_order_is_applied_to_pixels_and_repeats_keep_separate_outputs(self):
+        self.transforms["faceshield"] = lambda pixels: pixels * 2
+        recipe = [{"type": "phantomseal", "params": {"iterations": 10}},
+                  {"type": "faceshield", "params": {"iterations": 1}},
+                  {"type": "phantomseal", "params": {"iterations": 20}}]
+        report = self.protect(mode="custom", stages=recipe)
+        self.assertEqual([call["engine"] for call in self.calls], ["phantomseal", "faceshield", "phantomseal"])
+        self.assertEqual([call["pixel"] for call in self.calls], [(100, 110, 120), (102, 111, 118), (204, 222, 236)])
+        self.assertEqual(len({call["output_dir"] for call in self.calls}), 3)
+        with Image.open(report["source_path"]) as clean, Image.open(report["output_path"]) as output:
+            self.assertEqual(clean.getpixel((0, 0)), (100, 110, 120))
+            self.assertEqual(output.getpixel((0, 0)), (206, 223, 234))
+        with Image.open(report["stages"][0]["output_path"]) as first_stage:
+            self.assertEqual(first_stage.getpixel((0, 0)), (102, 111, 118))
+        self.assertIsNone(report["stage1_path"])
+        self.assertIsNone(report["faceshield_noise_limit"])
+        self.assertEqual(report["max_pixel_change"], 114)
+        self.assertEqual([stage["index"] for stage in report["stages"]], [1, 2, 3])
+        self.assertEqual([stage["params"]["iterations"] for stage in report["stages"]], [10, 1, 20])
+        self.assertEqual(report["pipeline"], [{"type": stage["type"], "params": stage["params"]} for stage in report["stages"]])
+        reordered = self.protect(mode="custom", stages=[recipe[1], recipe[0], recipe[2]])
+        with Image.open(reordered["output_path"]) as output:
+            self.assertEqual(output.getpixel((0, 0)), (204, 222, 236))
+        self.assertTrue(all(reference() is None for reference in self.engine_refs))
+
+    def test_custom_independent_parameters_and_monotonic_stage_progress(self):
+        self.progress_values = [.8, .1, 2, -.5]
+        progress = []
+        recipe = [{"type": "nullswap", "params": {"strength": 2.75, "seed": 4294967295}},
+                  {"type": "faceshield", "params": {"iterations": 17, "noise_clamp": 23,
+                                                     "step_size": .75, "analysis_size": 768}},
+                  {"type": "nullswap", "params": {"strength": 0, "seed": 42}},
+                  {"type": "phantomseal", "params": {"iterations": 2000}}]
+        report = self.protect(mode="custom", stages=recipe, progress=lambda value, label: progress.append((value, label)))
+        for call, stage in zip(self.calls, recipe):
+            self.assertEqual({key: call[key] for key in stage["params"]}, stage["params"])
+            self.assertEqual(call["size"], (128, 64))
+            if call["engine"] != "phantomseal":
+                self.assertEqual(call["max_size"], 128)
+        self.assertNotIn("strength", self.calls[1])
+        self.assertNotIn("iterations", self.calls[0])
+        self.assertEqual([value for value, _ in progress], sorted(value for value, _ in progress))
+        self.assertEqual((progress[0][0], progress[-1][0]), (0, 1))
+        self.assertTrue(all(f"Stage {index}/4" in " ".join(label for _, label in progress) for index in range(1, 5)))
+        saved = json.loads((Path(report["output_path"]).parent / "metadata.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["pipeline"], recipe)
+
+    def test_custom_stage_failure_and_changed_geometry_stop_before_next_factory(self):
+        recipe = [{"type": "nullswap"}, {"type": "faceshield"}, {"type": "phantomseal"}]
+        self.fail_at = 2
+        with self.assertRaisesRegex(RuntimeError, "faceshield failed"):
+            self.protect(mode="custom", stages=recipe)
+        self.assertNotIn("phantomseal:create", self.events)
+        self.assertIn("faceshield:close", self.events)
+        self.assertFalse(self.pipeline._loaded)
+        self.assertFalse((self.root / "job1" / "protected.png").exists())
+        self.fail_at, self.resize = None, "nullswap"
+        self.events.clear()
+        with self.assertRaisesRegex(RuntimeError, "Stage 1/3.*dimensions"):
+            self.protect(mode="custom", stages=recipe)
+        self.assertNotIn("faceshield:create", self.events)
+        self.assertIn("nullswap:close", self.events)
+        self.assertTrue(all(reference() is None for reference in self.engine_refs))
+        self.resize = None
+        self.assertEqual(self.protect(mode="custom", stages=[{"type": "nullswap"}])["max_pixel_change"], 3)
+
+    def test_custom_validation_precedes_all_factories_and_output_files(self):
+        invalid = [None, [], [{"type": "nullswap"}] * 9, "nullswap", [None], [{}],
+                   [{"type": "nullswap", "enabled": True}], [{"type": "nullswap", "params": None}],
+                   [{"type": "faceshield", "params": {"seed": 3}}],
+                   [{"type": "phantomseal", "params": {"iterations": 9}}],
+                   [{"type": "nullswap", "params": {"strength": float("nan")}}],
+                   [{"type": "nullswap", "params": {"seed": 1.5}}],
+                   [{"type": "faceshield", "params": {"analysis_size": 65}}],
+                   [{"type": "nullswap"}, {"type": "faceshield", "params": {"analysis_size": 65}}]]
+        for stages in invalid:
+            with self.subTest(stages=stages), self.assertRaises(ValueError):
+                self.protect(mode="custom", stages=stages)
+            self.assertFalse((self.root / f"job{self.job_number}").exists())
+        with self.assertRaisesRegex(ValueError, "only.*custom"):
+            self.protect(mode="nullswap", stages=[{"type": "nullswap"}])
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.events, [])
 
     def test_readiness_does_not_accept_config_without_required_weights(self):
         for relative in ("weights/faceshield/arcface50_checkpoint.tar", "weights/faceshield/arcface100_checkpoint.tar",

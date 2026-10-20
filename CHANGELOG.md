@@ -1,5 +1,12 @@
 # Changelog
 
+## Ordered protection pipelines — 2026-10-21
+
+- Add an editor pipeline builder with 1–8 ordered NullSwap, PhantomSeal and FaceShield stages, independent parameters, repeated filters and per-stage PNG downloads.
+- Save complete recipes in presets and migrate existing fixed-mode settings without losing their values.
+- Validate recipes before processing, execute stages sequentially with model cleanup and preserve the clean original as the comparison baseline.
+- Keep legacy API modes compatible; evaluate custom pipelines against their final result in real face-swap checks.
+
 ## Foreground server launch — 2026-10-21
 
 - Make `manage.cmd run` and `make run` keep the server and live logs in the current terminal until exit; use Ctrl+C to stop it.
