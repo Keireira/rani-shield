@@ -158,11 +158,37 @@ class PipelineTests(unittest.TestCase):
             self.assertTrue(all(reference() is None for reference in self.model_refs))
 
     def test_invalid_stage_parameters_fail_before_model_factories(self):
-        for arguments in ({"mode": "unknown"}, {"noise_clamp": 33}, {"step_size": 0}):
+        for arguments in ({"mode": "unknown"}, {"noise_clamp": 33}, {"step_size": 0},
+                          {"noise_clamp": "12"}, {"step_size": True}, {"noise_clamp": float("nan")},
+                          {"analysis_size": 65}, {"analysis_size": True}, {"analysis_size": 2048}):
             with self.subTest(arguments=arguments), self.assertRaises(ValueError):
                 self.protect(**arguments)
         self.assertEqual(self.calls, [])
         self.assertEqual(self.events, [])
+
+    def test_nullswap_is_independent_preserves_geometry_and_releases(self):
+        self.changes["nullswap"] = (2, -3, 1)
+        self.pipeline._nullswap_factory = lambda: FakeEngine(self, "nullswap")
+        with patch.object(pipeline_module, "readiness", side_effect=AssertionError("No ensemble needed")):
+            report = self.protect(mode="nullswap")
+        self.assertEqual([call["engine"] for call in self.calls], ["nullswap"])
+        self.assertEqual(self.calls[0]["size"], (128, 64))
+        self.assertIsNone(report["stage1_path"])
+        self.assertIsNone(report["faceshield_noise_limit"])
+        self.assertEqual(report["max_pixel_change"], 3)
+        self.assertFalse(self.pipeline._loaded)
+        self.assertTrue(all(reference() is None for reference in self.engine_refs))
+
+    def test_nullswap_controls_reach_only_its_engine(self):
+        self.changes["nullswap"] = (2, -3, 1)
+        self.pipeline._nullswap_factory = lambda: FakeEngine(self, "nullswap")
+        self.protect(mode="nullswap", nullswap_strength=2.75, nullswap_seed=4294967295)
+        self.assertEqual(self.calls[-1]["strength"], 2.75)
+        self.assertEqual(self.calls[-1]["seed"], 4294967295)
+        self.protect(mode="phantomseal_faceshield", nullswap_strength=4, nullswap_seed=123)
+        for call in self.calls[1:]:
+            self.assertNotIn("strength", call)
+            self.assertNotIn("seed", call)
 
     def test_readiness_does_not_accept_config_without_required_weights(self):
         for relative in ("weights/faceshield/arcface50_checkpoint.tar", "weights/faceshield/arcface100_checkpoint.tar",

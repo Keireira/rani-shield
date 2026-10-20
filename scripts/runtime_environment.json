@@ -1,0 +1,36 @@
+{
+  "cache_paths": {
+    "HF_HOME": "weights/cache/huggingface",
+    "HF_HUB_CACHE": "weights/cache/huggingface/hub",
+    "HUGGINGFACE_HUB_CACHE": "weights/cache/huggingface/hub",
+    "HF_DATASETS_CACHE": "weights/cache/huggingface/datasets",
+    "HF_ASSETS_CACHE": "weights/cache/huggingface/assets",
+    "TORCH_HOME": "weights/cache/torch",
+    "CUDA_CACHE_PATH": ".cache/cuda",
+    "TORCH_EXTENSIONS_DIR": ".cache/torch-extensions",
+    "TRITON_CACHE_DIR": ".cache/triton",
+    "TORCHINDUCTOR_CACHE_DIR": ".cache/torch-inductor",
+    "XDG_CACHE_HOME": ".cache",
+    "PIP_CACHE_DIR": ".cache/pip",
+    "NUMBA_CACHE_DIR": ".cache/numba",
+    "MPLCONFIGDIR": ".cache/matplotlib",
+    "GRADIO_TEMP_DIR": ".cache/gradio",
+    "TEMP": ".cache/tmp",
+    "TMP": ".cache/tmp",
+    "TMPDIR": ".cache/tmp"
+  },
+  "settings": {
+    "PYTHONNOUSERSITE": "1",
+    "HF_HUB_DISABLE_TELEMETRY": "1",
+    "DO_NOT_TRACK": "1",
+    "GRADIO_ANALYTICS_ENABLED": "False",
+    "PIP_CONFIG_FILE": "nul"
+  },
+  "unset": [
+    "PYTHONPATH",
+    "PYTHONHOME",
+    "TRANSFORMERS_CACHE",
+    "PYTORCH_TRANSFORMERS_CACHE",
+    "PYTORCH_PRETRAINED_BERT_CACHE"
+  ]
+}

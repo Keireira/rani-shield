@@ -1,6 +1,15 @@
 # Provenance and retained terms
 
-FaceShield Studio is an adapted local application based on **FaceShield: Defending Facial Image against Deepfake Threats**, developed by **Korea University Artificial Intelligence Computer Vision Lab (KUAICV), Department of Artificial Intelligence, Korea University — https://kuaicv.com/**. The original [KUAICV Research-Only License](../LICENSE) remains in the repository. The original README is preserved as [UPSTREAM_README.md](UPSTREAM_README.md).
+Rani Shield is an adapted local application based directly on **FaceShield: Defending Facial Image against Deepfake Threats**, developed by **Korea University Artificial Intelligence Computer Vision Lab (KUAICV), Department of Artificial Intelligence, Korea University — https://kuaicv.com/**. The original [KUAICV Research-Only License](../LICENSE) remains in the repository. The original README is preserved as [UPSTREAM_README.md](UPSTREAM_README.md).
+
+## FaceShield and iccv25_faceshield credits
+
+Both named repositories are explicitly acknowledged:
+
+- **[FaceShield — Why0912/FaceShield](https://github.com/Why0912/FaceShield)** is *FaceShield: Explainable Face Anti-Spoofing with Multimodal Large Language Models*, built on Bunny. Investigation of that project was the starting point of this development effort. Its RGB/SAV anti-spoofing task differs from image protection, and its trained multimodal model is not integrated in the current application. Its repository carries an MIT notice; that notice does not license the distinct KUAICV protection code.
+- **[iccv25_faceshield — kuai-lab/iccv25_faceshield](https://github.com/kuai-lab/iccv25_faceshield)** is the direct implementation foundation of the protection stage. The work by Jaehwan Jeong, Sumin In, Sieun Kim, Hannie Shin, Jongheon Jeong, Sang Ho Yoon, Jaewook Chung and Sangpil Kim appeared at ICCV 2025 as *FaceShield: Defending Facial Image against Deepfake Threats*. Rani Shield adapts that code for local Windows execution, the editor, sequential gradients and output-resolution perturbations.
+
+The identities above were verified against both local Git remotes and the official repository pages. The same name in the two repositories does not imply that they are the same model, authors or license. Neither acknowledgment implies upstream endorsement of Rani Shield.
 
 The KUAICV license permits non-commercial academic, educational and research use subject to its conditions. It expressly requires separate written permission for commercial use, including internal commercial research/product development by a for-profit entity. Third-party code, weights and datasets retain their own terms; an MIT component does not relicense this combined application or its models.
 
@@ -10,7 +19,7 @@ The source snapshot was assembled from upstream FaceShield commit `2eeabde945952
 
 | Component | Primary source | Local adaptation and notices |
 |---|---|---|
-| FaceShield | [Official repository](https://github.com/kuai-lab/iccv25_faceshield), [paper](https://arxiv.org/abs/2412.09921) | Windows runtime, lazy/local weights, sequential gradients, full-resolution output delta and smaller differentiable diffusion view; original root license retained |
+| iccv25_faceshield / KUAICV FaceShield | [Official repository](https://github.com/kuai-lab/iccv25_faceshield), [paper](https://arxiv.org/abs/2412.09921) | Direct protection-code foundation; Windows runtime, lazy/local weights, sequential gradients, full-resolution output delta and smaller differentiable diffusion view; original root license retained |
 | PhantomSeal | [Official repository](https://github.com/LiangqinRen/PhantomSeal), [paper](https://arxiv.org/abs/2607.20564) | Full `unify` four-feature objective and 214-photo mixed bank; source MIT notice in `third_party/phantomseal/PHANTOMSEAL_LICENSE` |
 | SimSwap | [Official repository](https://github.com/neuralchen/SimSwap) | Minimal generator for real local validation; `simswap_networks.py` retains NVIDIA's CC-BY-NC-SA-4.0 file notice; repository CC-BY-NC-4.0 notice retained in `SIMSWAP_LICENSE` |
 | FaceShifter recognition | [PhantomSeal-pinned Research_Project source](https://github.com/richarduuz/Research_Project/blob/d970296cf9d9fe059d729444c757334c9e13a798/ModelC/face_modules/model.py) | Recognition classes only, `view` changed to `reshape`; originating InsightFace_Pytorch MIT notice retained. The containing fork has no root license file; this does not assign a license to its GAN or weights |
@@ -23,7 +32,11 @@ The source snapshot was assembled from upstream FaceShield commit `2eeabde945952
 
 Detailed architecture source URLs, imported-source hashes and retained notices are in [`third_party/phantomseal/full/SOURCES.json`](../third_party/phantomseal/full/SOURCES.json) and [`NOTICE.md`](../third_party/phantomseal/full/NOTICE.md). The vendor directory includes separate notices for Deep3D, HifiFace, InsightFace_Pytorch, InsightFace and torchvision. Model weights are not relicensed by those source-code notices.
 
-The browser's canvas interaction model was adapted from the local DeSynth project during development: pan/zoom, comparison modes, exact pixel differences and PNG export. The integration adds model controls, asynchronous local jobs and baseline-gated SimSwap testing. This attribution does not assert an independently verified license for that local project's other assets.
+The browser's canvas interaction model was adapted from the local DeSynth project during development: pan/zoom, comparison modes, exact pixel differences and PNG export. The integration adds model controls, asynchronous local jobs and baseline-gated face-swap testing. This attribution does not assert an independently verified license for that local project's other assets.
+
+## Additional protection and evaluation models
+
+NullSwap uses PhantomSeal's documented best-effort reconstruction, with its released checkpoint and default gain 1, not a claim of original-author reproduction. DiffSwap, InfoSwap and UniFace use their released swap checkpoints and vendored inference code. [NEW_MODELS.md](NEW_MODELS.md) documents preprocessing adaptations, pinned source commits and notices. Separate retained source/license files live under `third_party/nullswap/`, `third_party/diffswap/`, `third_party/infoswap/` and `third_party/uniface/`; observed file hashes live in local `weights/manifests/` records. The optional importer records observed checkpoint hashes, verifies copied bytes, and pins the downloaded InfoSwap statistics by revision, byte count and SHA-256. Runtime models never resolve through the old archive directory.
 
 ## Released weights and downloads
 
@@ -67,3 +80,9 @@ Sanitized numerical evidence is committed under [`docs/evidence/`](evidence/), a
 Custom `torch.load` paths load on CPU with `weights_only=True`; the explicit encoder/generator state loaders use strict matching. Hugging Face components use their own `from_pretrained` loaders. The legacy serialized SimSwap ArcFace module uses a static unsafe-global check and an exact allowlist of audited local ArcFace classes and necessary PyTorch layers. The legacy FaceShifter format has bounded metadata inspection before the restricted tensor loader. There is no unrestricted pickle fallback.
 
 The full HifiFace checkpoint is read as tensor state, and only the exact identity/shape prefixes are transferred into the minimal encoders. The runtime does not instantiate the downloaded Lightning training class. These choices reduce the code-execution surface of loading released weights; they do not certify all external files or their provenance.
+
+## Local runtime notices
+
+The local Python installation under `.runtime/python/` is an independent copy of CPython 3.11, with its `LICENSE.txt` retained. The optional Node.js executable under `.runtime/node/` retains the license from the same distribution. Bootstrap manifests record the copied files and observed hashes; their original installation paths are historical records, not locations used for normal execution.
+
+Python package licenses remain with their installed distributions in `.venv/`. These runtime components do not change the KUAICV license on the protection derivative or the individual model/data terms. The older unused research launch scripts and face-parser modules were removed from the active application during refactoring; the original research documentation and source attributions remain available.

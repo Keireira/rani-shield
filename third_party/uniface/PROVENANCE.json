@@ -1,0 +1,27 @@
+{
+  "repository": "https://github.com/xc-csc101/UniFace",
+  "commit": "05f15e57668e7ce30399233c2456bb0f4cb35055",
+  "files": {
+    "training/model.py": {
+      "sha256": "46fc91eb7a015291f529056b246bbd5ad2d11f2e1f98ad4256cf0476573f2719"
+    },
+    "training/op/fused_act.py": {
+      "sha256": "cf611cb3423c507a92db5cf5ac528597318075370630b731062dc555d9dc022a"
+    },
+    "training/op/upfirdn2d.py": {
+      "sha256": "f44f45d8103bbeab5bbbaa202b455713c61e60fb55f9e938de3e1ecb9a41db87"
+    },
+    "generate_swap.py": {
+      "sha256": "7d1b21feaa64863e76e9e49f10a0c7fe53c497ef9dd186a0e5720e6d1665e932"
+    },
+    "README.md": {
+      "sha256": "a5a4df8c2482eb3ffaab21243c8a021b8370435cb146c25307ea31d69e82e420"
+    }
+  },
+  "changes": [
+    "Selected only inference architecture dependencies, with package-local imports.",
+    "Replaced compiled CUDA activation/filter operators with pure PyTorch equivalents.",
+    "Adapter keeps official PIL bilinear resize256, RGB [-1,1], target then source concatenation, g_ema/e_ema weights and output [-1,1] quantization.",
+    "No upstream LICENSE file exists at this commit; retained source CC BY-NC4 notice from StyleMapGAN and upstream README."
+  ]
+}

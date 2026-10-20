@@ -1,5 +1,6 @@
 # Local runtime, uploads, generated images and machine-specific state
 .venv/
+.runtime/
 venv/
 .cache/
 results/

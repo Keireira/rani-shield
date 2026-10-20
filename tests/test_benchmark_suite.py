@@ -1,5 +1,6 @@
 """Reproducibility contracts for suite inputs, cache reuse and JPEG condition."""
 import json
+import os
 import tempfile
 import unittest
 from argparse import Namespace
@@ -14,22 +15,28 @@ from benchmark_chain import sha256_file
 
 
 class SuiteTests(unittest.TestCase):
+    @staticmethod
+    def environment_fixture(root):
+        names = ["weights/simswap/latest_net_G.pth", "weights/simswap/arcface_checkpoint.tar",
+                 "weights/facenet/facenet_vggface2.pt", "weights/faceshifter/model_ir_se50.pth",
+                 "weights/hififace/hififace_opensource_299999.ckpt", "weights/ip-adapter/ip-adapter_sd15.bin",
+                 "weights/faceshield/arcface50_checkpoint.tar", "weights/faceshield/arcface100_checkpoint.tar",
+                 "weights/mtcnn/pnet.pt", "weights/mtcnn/rnet.pt", "weights/mtcnn/onet.pt",
+                 "weights/sd15/unet/model.safetensors", "models/arcface_models.py",
+                 "protection_pipeline.py", "protector.py", "phantomseal_runtime.py",
+                 "phantomseal_assets.py", "ensemble_encoders.py", "asset_paths.py",
+                 "image_io.py", "runtime_contracts.py", "scripts/runtime_environment.py",
+                 "scripts/runtime_environment.json"]
+        for name in names:
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"fixture")
+        (root / "phantomseal_config.json").write_text("{}")
+
     def test_environment_hashes_central_models_and_detector_without_legacy_weight_paths(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            names = ["weights/simswap/latest_net_G.pth", "weights/simswap/arcface_checkpoint.tar",
-                     "weights/facenet/facenet_vggface2.pt", "weights/faceshifter/model_ir_se50.pth",
-                     "weights/hififace/hififace_opensource_299999.ckpt", "weights/ip-adapter/ip-adapter_sd15.bin",
-                     "weights/faceshield/arcface50_checkpoint.tar", "weights/faceshield/arcface100_checkpoint.tar",
-                     "weights/mtcnn/pnet.pt", "weights/mtcnn/rnet.pt", "weights/mtcnn/onet.pt",
-                     "weights/sd15/unet/model.safetensors", "models/arcface_models.py",
-                     "protection_pipeline.py", "protector.py", "phantomseal_runtime.py",
-                     "phantomseal_assets.py", "ensemble_encoders.py", "asset_paths.py"]
-            for name in names:
-                path = root / name
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b"fixture")
-            (root / "phantomseal_config.json").write_text("{}")
+            root = Path(temporary).resolve()
+            self.environment_fixture(root)
             old = root / ".cache/models/unused.safetensors"
             old.parent.mkdir(parents=True)
             old.write_bytes(b"old location")
@@ -42,6 +49,28 @@ class SuiteTests(unittest.TestCase):
             self.assertIn(str(root / "asset_paths.py"), first["files"])
             self.assertIn(str(root / "models/arcface_models.py"), first["files"])
             self.assertNotEqual(first["files"][str(detector)], second["files"][str(detector)])
+            # Windows CI can hand tempfile a RUNNER~1 path while resolve()
+            # expands it to runneradmin. Fingerprints must use one spelling.
+            relative_root = root / "weights" / ".."
+            with patch("benchmark_suite.importlib.metadata.version", return_value="fixture"):
+                self.assertEqual(second, environment_fingerprint(relative_root))
+
+    @unittest.skipUnless(os.name == "nt", "Windows 8.3 path aliases")
+    def test_windows_short_alias_preserves_environment_fingerprint(self):
+        import ctypes
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve() / "Long benchmark fixture directory"
+            self.environment_fixture(root)
+            buffer = ctypes.create_unicode_buffer(32768)
+            size = ctypes.windll.kernel32.GetShortPathNameW(str(root), buffer, len(buffer))
+            if not size or size >= len(buffer) or Path(buffer.value) == root:
+                self.skipTest("This volume does not provide an 8.3 alias for the fixture.")
+            alias = Path(buffer.value)
+            self.assertEqual(alias.resolve(), root)
+            with patch("benchmark_suite.importlib.metadata.version", return_value="fixture"):
+                long_names = environment_fingerprint(root)
+                self.assertEqual(environment_fingerprint(alias), long_names)
+            self.assertIn(str(root / "weights/mtcnn/pnet.pt"), long_names["files"])
 
     def test_baseline_gate_is_finite_in_range_and_validated_before_any_model_work(self):
         self.assertEqual(baseline_cutoff(0), 0.)

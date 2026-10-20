@@ -2,6 +2,8 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+import weakref
 
 import torch
 from torch import nn
@@ -10,7 +12,7 @@ import torch.nn.functional as F
 from ensemble_encoders import (FaceShifterFeatures, HifiFace3DFeatures,
                                HifiFaceIDFeatures, SimSwapFeatures)
 from phantomseal_assets import ensemble_readiness
-from phantomseal_runtime import ensemble_loss, sequential_objective
+from phantomseal_runtime import PhantomSealProtector, ensemble_loss, sequential_objective
 
 
 # Deliberately independent of the production table: these are unify.yaml values.
@@ -37,6 +39,22 @@ class ToyBranch(nn.Module):
 
 
 class EnsembleObjectiveTests(unittest.TestCase):
+    def test_failed_model_load_releases_partial_ensemble(self):
+        runtime = PhantomSealProtector(Path(__file__).resolve().parents[1], device="cpu")
+        references = []
+        def fail_load(progress):
+            runtime.facenet = nn.Linear(2, 2)
+            runtime.branches = {"simswap": nn.Linear(2, 2)}
+            references.extend(weakref.ref(model) for model in (runtime.facenet, runtime.branches["simswap"]))
+            raise RuntimeError("Incomplete local checkpoint")
+        with patch.object(runtime, "_load_models", side_effect=fail_load):
+            with self.assertRaisesRegex(RuntimeError, "Incomplete local checkpoint"):
+                runtime.load_models()
+        self.assertTrue(all(reference() is None for reference in references))
+        self.assertEqual(runtime.branches, {})
+        self.assertIsNone(runtime.facenet)
+        self.assertFalse(runtime._loaded)
+
     def test_exact_weights_caps_and_gradient_above_below_cap(self):
         for name, (self_weight, cloak_weight, cap) in TERMS.items():
             for saturated in (False, True):

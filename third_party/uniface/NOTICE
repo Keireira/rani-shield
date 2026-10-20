@@ -1,0 +1,16 @@
+UniFace: Designing One Unified Framework for High-Fidelity Face Reenactment and Swapping (ECCV 2022).
+Source: https://github.com/xc-csc101/UniFace
+Pinned commit: 05f15e57668e7ce30399233c2456bb0f4cb35055
+
+The model source carries the following upstream notice:
+
+StyleMapGAN
+Copyright (c) 2021-present NAVER Corp.
+This work is licensed under the Creative Commons Attribution-NonCommercial
+4.0 International License. To view a copy of this license, visit
+http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to
+Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+UniFace upstream includes no separate LICENSE file at this commit.
+Operator source refers to https://github.com/rosinality/stylegan2-pytorch.
+Rani Shield implements these operators with PyTorch tensor primitives.

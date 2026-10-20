@@ -1,80 +1,58 @@
-# Запуск на Windows
+# Rani Shield on Windows
 
-Эта папка содержит локальную адаптацию **FaceShield: Defending Facial Image against Deepfake Threats (ICCV 2025)** и PhantomSeal. Алгоритмы добавляют ограниченное возмущение к фотографии; наличие результата само по себе не подтверждает успешную защиту.
+Use [README.md](README.md) for the installation and workflow, [QUICKSTART.md](QUICKSTART.md) for Russian commands, and [weights/README.md](weights/README.md) for model placement. This page covers Windows operation and troubleshooting.
 
-Все активные веса находятся в `weights/`; структура и назначение файлов указаны в [weights/README.md](weights/README.md). После подготовки `.venv` и ресурсов запустите из PowerShell в корне проекта:
+## Local runtime
 
-```powershell
-& ".\launch.ps1"
-```
+`manage.cmd setup` prepares `.runtime/python/` and the project's `.venv`, with Python 3.11 and the pinned CUDA 12.8 PyTorch wheels. The setup step can copy an installed Python 3.11 and Node.js into the project. Once prepared, processing uses local interpreter and package files; sibling source repositories and the bootstrap Python are unnecessary at runtime. The host supplies Windows, PowerShell, a compatible NVIDIA driver and a browser.
 
-Откройте [локальную страницу](http://127.0.0.1:7876). Загрузите фотографию, нажмите **Protect photo**, дождитесь обработки и скачайте PNG. Модели загружаются поочерёдно и освобождают видеопамять между этапами. Остановить сервер можно сочетанием `Ctrl+C` в окне запуска.
+The GPU configuration exercised during development is an RTX 5070 Ti with 16 GB VRAM. Missing CUDA support, an incompatible driver or insufficient VRAM can prevent processing. `manage.cmd doctor` reports the configured environment and assets; it does not load the complete model tensors.
 
-Для настройки и фонового запуска через `make` или `manage.cmd` используйте [QUICKSTART.md](QUICKSTART.md). Команда `make benchmark` выполняет реальные подмены SimSwap для сравнения PhantomSeal и цепочки с FaceShield и сохраняет HTML-отчёт с изображениями.
+## Server lifecycle
 
-По умолчанию результат сохраняет пропорции и длинную сторону до **1280 px**. Меньшие изображения не увеличиваются. Результаты остаются в `results/editor/` в отдельных папках; исходные файлы не удаляются.
-
-В локальной версии возмущение оптимизируется в размере результата, а тяжёлые модели оценивают уменьшенную копию до 512 px. Это адаптация для доступной видеопамяти; она требует отдельной проверки устойчивости на нужных моделях подмены лица.
-
-PNG сохраняет добавленное возмущение без потерь. JPEG, изменение размера, ретушь и повторная обработка могут его изменить. Текущие локальные измерения не подтверждают надёжную защиту или пользу второго этапа; ограничения и исправленная интерпретация приведены в [docs/VALIDATION.md](docs/VALIDATION.md).
-
-Действует исходная **KUAICV Research-Only License** из `LICENSE`: только некоммерческое академическое, образовательное и исследовательское применение. Для коммерческого использования требуется разрешение правообладателя. У базовых моделей также действуют их собственные лицензии.
-
-
-## Подготовка окружения
+Run commands in the repository root:
 
 ```powershell
-.\manage.cmd setup
-.\manage.cmd models
+.\manage.cmd run
 ```
 
-`models` не скачивает полные архивы PhantomSeal. Из них разместите распознающий checkpoint FaceShifter в `weights/faceshifter/model_ir_se50.pth`, полный checkpoint HifiFace в `weights/hififace/hififace_opensource_299999.ckpt`, а все 214 фото банка — в `weights/phantomseal/cloaks/mix_full/`. SimSwap, FaceNet, SD 1.5, IP-Adapter и веса FaceShield получают свои подпапки внутри `weights/`. Три обязательных веса детектора из установленного facenet-pytorch копируются в `weights/mtcnn/`.
+The default address is [http://127.0.0.1:7876](http://127.0.0.1:7876). To select another port:
 
 ```powershell
-.\manage.cmd configure -Checkpoints "weights" -Cloaks "weights\phantomseal\cloaks\mix_full"
-.\manage.cmd doctor
+.\manage.cmd run -Port 7877
 ```
 
-Для переноса из полной старой установки после `setup`:
+Both `manage.cmd run` and `make run` keep the server in the current terminal and print its logs directly. The command returns when the server exits; press **Ctrl+C** to stop it. No background server, PID record or server log files are created. Ordinary setup, model and test commands do not start an editor server.
+
+Inspect port occupancy from another terminal:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/import_local_assets.py --source "F:\Git\iccv25_faceshield"
+.\manage.cmd status
+.\manage.cmd status -Port 7877
 ```
 
-Для старого расположения ресурсов в этой же Studio: остановите её сервер, посмотрите план `scripts/migrate_weights.py`, затем выполните тот же скрипт с `--apply` и повторите `doctor`. План сам по себе ничего не переносит. Старое окружение и пользовательские результаты не перемещаются.
+`run` refuses to start if the selected port is occupied or a recorded legacy server is still running. It neither reuses nor stops the existing process. `manage.cmd stop` remains available only for background servers started by an older version: it verifies the saved executable, command line, PID and creation time before stopping them. It does not manage the new foreground server.
 
-Адаптация локального интерфейса и режима до 1280 px выполнена на основе FaceShield KUAICV; исходные уведомления и LICENSE сохранены. Веса ArcFace загружаются с `weights_only=True` и ограниченным списком проверенных классов.
+`launch.ps1` delegates to `manage.ps1 run` with the same foreground behavior. Neither launcher opens a browser automatically. `app.py` remains a compatibility entry point.
 
-## Другой порт
+## Common issues
 
-По умолчанию интерфейс использует порт **7876**. Для выбора своего порта:
+| Symptom | Action |
+|---|---|
+| Environment missing or wrong Python version | Run `manage.cmd setup`, then `manage.cmd doctor`. Preserve an incompatible environment until you have reviewed the setup message. |
+| Port already occupied | Inspect `manage.cmd status`; choose `-Port 7877` if the occupant belongs to another app. |
+| A configured model path points outside the project | Copy the resource into `weights/` and use repository-relative configuration. External runtime overrides are rejected. |
+| Missing PhantomSeal branch or fewer than 214 bank images | Follow the exact archive placement map in [weights/README.md](weights/README.md); `models` alone does not fetch the two full archives. |
+| A model loader reports an incompatible checkpoint | Verify the intended release and manifest hash; renaming an unrelated checkpoint does not make it compatible. |
+| Out of GPU memory | Close other GPU jobs, reduce the output limit, or test one protection method at a time. Each setting still needs its own validation. |
+| No face detected | Use a clear portrait with a sufficiently large, visible face; the current path optimizes the largest detected face. |
+| Previous session disappeared after restart | Reupload the input. The asset/job registry lives in memory, while existing PNG files remain in `results/editor/`. |
+| Test result is Inconclusive | Inspect the unprotected swap first. It must pass the numerical baseline gate and the separate visual likeness confirmation. |
 
-```powershell
-& ".\launch.ps1" -Port 7877
-```
+## Output behavior
 
-При прямом запуске `app.py` порт можно задать переменной `FACESHIELD_PORT`.
+Images preserve proportions, with a long edge up to 1280 px and no enlargement of smaller inputs. Protection operates on RGB; transparency is flattened during processing. SSIM, PSNR and changed pixels compare the normalized original with the result at the same resolution.
 
+**Export PNG** saves the original in Original view, the full-resolution difference in Diff view and the protected result in the other views. Pan, zoom and comparison slider position are not baked into the exported photo. Generated files stay under `results/editor/`; your original file is not overwritten.
 
-## Редактор фотографий
-
-Интерфейс использует логику редактора DeSynth с обработкой FaceShield:
-
-- **Open image** или перетаскивание открывает фотографию.
-- **Protect photo** запускает обработку с параметрами справа.
-- **Original / Slider / Side by side / Result / Diff** переключают просмотр.
-- Колесо мыши и кнопки **+ / −** меняют масштаб; перетаскивание перемещает изображение; **Fit** сбрасывает просмотр.
-- **Export PNG** сохраняет исходник в режиме Original, карту разницы в Diff, обработанный результат в остальных режимах.
-- **Settings** позволяет сохранять и выбирать пресеты параметров. Смена параметров применяется к следующему запуску.
-
-Счётчики SSIM, PSNR и Changed сравнивают пиксели; они не оценивают устойчивость к фейссвапу.
-При уменьшении фотографии сравниваются обработанный PNG и исходник того же размера.
-Прозрачность входного изображения преобразуется в RGB при обработке FaceShield.
-
-Прямой запуск:
-
-```powershell
-.\.venv\Scripts\python.exe gui.py --port 7876 --no-browser
-```
-
-PhantomSeal → FaceShield: see [PHANTOMSEAL.md](PHANTOMSEAL.md) for setup, outputs and limitations.
+PNG preserves the generated perturbation without lossy compression. JPEG, resizing, retouching and subsequent processing can change it. Current evidence is summarized in [Validation](docs/VALIDATION.md); successful execution does not establish reliable defense.

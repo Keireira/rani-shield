@@ -1,23 +1,30 @@
 # Development
 
-FaceShield Studio is a local research application, with a browser canvas served by FastAPI and one serialized GPU worker. The default server binds to `127.0.0.1:7876`, separate from the earlier installation's 7875; an alternate checkout can use 7877. No cloud inference service is required by the integrated processing path.
+Rani Shield is a local research application, with a browser canvas served by FastAPI and one serialized GPU worker. The default server binds to `127.0.0.1:7876`; an alternate instance can use 7877. No cloud inference service is required by the integrated processing path.
 
 ## Components
 
 | File or directory | Responsibility |
 |---|---|
 | `gui.py`, `app.py` | Local HTTP server, asset registry, job queue; `app.py` is a compatibility entry point |
-| `web/` | Canvas comparison, image export, settings and baseline-gated SimSwap test modal |
-| `protection_pipeline.py` | Input normalization, three processing modes, clean baseline and stage metadata |
+| `web/` | Canvas comparison, image export, settings and baseline-gated selectable face-swap test modal |
+| `protection_pipeline.py` | Input normalization, four processing modes, clean baseline and stage metadata |
+| `runtime_contracts.py`, `image_io.py` | Shared parameter validation, output dimensions, image decoding and PNG/JPEG95 transformations |
 | `phantomseal_runtime.py` | Cloak selection, face alignment and full-resolution PhantomSeal optimization |
 | `ensemble_encoders.py` | Strict checkpoint loading and exact four-branch preprocessing wrappers |
-| `phantomseal_assets.py` | Unified resource configuration and readiness checks |
+| `asset_paths.py`, `phantomseal_assets.py` | Project-contained resource paths, configuration and readiness checks |
 | `protector.py` | Memory-conscious FaceShield adapter and standalone CLI |
-| `protection_test.py` | Real SimSwap comparisons for completed editor results |
+| `nullswap_runtime.py` | Standalone labelled NullSwap reconstruction; bounded native residual mapped to full output |
+| `swap_adapters/`, `swap_evaluation.py`, `face_evaluation.py` | Lazy swapper registry, native model adapters, independent face measurement and detection gates |
+| `protection_test.py` | Shared PNG/JPEG95 orchestration for four real swap backends |
 | `benchmark_chain.py`, `benchmark_alignment.py` | Paired SimSwap synthesis, alignment and FaceNet measurement |
 | `benchmark_suite.py`, `benchmark_report.py` | Public manifest runner, resume verification and condition/source-aware reports |
 | `download_models.py`, `download_phantomseal.py` | Public base-weight installers |
-| `manage.cmd`, `manage.ps1`, `scripts/manage_checks.py` | Windows environment, model checks and owned server lifecycle |
+| `manage.cmd`, `manage.ps1`, `scripts/manage_checks.py` | Windows environment, model checks, foreground server launch and legacy process cleanup |
+| `scripts/bootstrap_runtime.py` | Copy and verify the project-local CPython/Node runtimes, retaining their notices |
+| `scripts/runtime_environment.json`, `scripts/runtime_environment.py` | Shared local cache/temp environment contract for Python and management scripts |
+| `scripts/smoke_check.py` | Offline GPU execution probe with model/Python file provenance; no editor server |
+| `scripts/import_swap_assets.py` | Explicit optional archive import; streaming hash verification, safe paths and pinned InfoSwap readout downloads |
 | `scripts/import_local_assets.py` | Copy verified local runtime assets and full bank into this installation with a hash manifest |
 | `scripts/weight_assets.py` | Shared resource mapping, hash and manifest helpers without model loading |
 | `scripts/migrate_weights.py` | Preview or apply an in-project migration from the earlier resource layout to `weights/` |
@@ -25,7 +32,9 @@ FaceShield Studio is a local research application, with a browser canvas served 
 
 ## Environment and commands
 
-Use Python 3.11. `manage.cmd setup` pins CUDA 12.8 PyTorch wheels before installing `requirements-windows.txt`. The manager verifies package versions and CUDA build metadata rather than treating any installed `torch` as suitable. Existing environment files are reused when ready. Some non-core dependency ranges remain ranges; this is not a fully locked transitive environment.
+`manage.cmd setup` prepares a project-local Python 3.11 installation at `.runtime/python/` and a `.venv` that uses it. The Python executable, standard library and DLLs are inside the repository, alongside the packages. Bootstrap may copy an installed Python 3.11 once; the original installation is not needed after preparation. Node.js can similarly be copied to `.runtime/node/` for frontend checks.
+
+The manager pins CUDA 12.8 PyTorch wheels before installing `requirements-windows.txt` and verifies package versions/build metadata. Ready package installations are reused. Some non-core dependency ranges remain ranges; this is not a fully locked transitive environment. Windows and the NVIDIA driver remain host requirements; management uses Windows PowerShell.
 
 ```powershell
 .\manage.cmd setup
@@ -33,19 +42,19 @@ Use Python 3.11. `manage.cmd setup` pins CUDA 12.8 PyTorch wheels before install
 .\manage.cmd configure -Checkpoints "weights" -Cloaks "weights\phantomseal\cloaks\mix_full"
 .\manage.cmd doctor
 .\manage.cmd run
-.\manage.cmd status
-.\manage.cmd stop
 ```
 
-`setup -Python311 "C:\Path\python.exe"` selects an explicit interpreter when the Windows `py -3.11` launcher is unavailable. `-DryRun` prints the management plan without installing, writing, starting or stopping. GNU Make mirrors the same commands, for example `make run PORT=7877`; it is not needed to use the application.
+`setup -Python311 "C:\Path\python.exe"` selects an explicit bootstrap interpreter when automatic discovery is unavailable. It is a setup source, not a runtime path. `-DryRun` prints the management plan without installing, writing, starting or stopping. GNU Make mirrors the same commands, for example `make run PORT=7877`; it is not needed to use the application. A bare `make` prints help. Checks and setup do not start the editor.
 
-For an interactive terminal server instead of the managed background process:
+`manage.cmd run` and `make run` invoke the server synchronously in the current terminal, with live stdout/stderr. They return when the server exits; **Ctrl+C** stops it. They create no background server, PID record or server log files. `launch.ps1` delegates to `manage.ps1 run`, so both launch paths use the same validation and foreground behavior without opening a browser.
+
+Inspect port occupancy from another terminal:
 
 ```powershell
-.\.venv\Scripts\python.exe gui.py --host 127.0.0.1 --port 7876 --no-browser
+.\manage.cmd status
 ```
 
-Do not start both launchers on the same port. The manager records the executable, command line, PID and exact process creation time, verifies the listening process, and stops only its own identified server. Logs are written to `.cache/manage/`.
+`run` rejects an occupied port or an active recorded legacy server without starting, stopping or reusing a process. `stop` is retained only for older background launches with a verified saved executable, command line, PID and exact process creation time. It does not control foreground servers; use **Ctrl+C** in their terminal.
 
 ## Model and data layout
 
@@ -61,21 +70,20 @@ Full PhantomSeal paths are configured in `phantomseal_config.json`:
 }
 ```
 
-`configure` validates the resource directories and updates this configuration; it does not copy archive contents. Explicit external paths remain supported as an override, but the portable default places everything in this repository's `weights/`. The default chain requires the complete bank and all four branches. Missing files produce a readiness message, rather than an automatic fallback to the old 24-photo demo bank or a partial objective.
+`configure` validates the resource directories and records paths relative to the project; it does not copy archive contents. Runtime resources must resolve inside the project. External overrides and links escaping the root are rejected. The default chain requires the complete bank and all four branches. Missing files produce a readiness message, rather than an automatic fallback to the old 24-photo demo bank or a partial objective.
 
 To migrate a complete installation after preparing the new environment, use:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/import_local_assets.py --source "F:\Git\iccv25_faceshield"
+.\.venv\Scripts\python.exe scripts/import_local_assets.py --source "D:\path\to\old-installation"
 .\manage.cmd doctor
 ```
 
 The importer selects the minimal complete runtime files and all 214 bank images, copies them into ignored `weights/` storage, records hashes under `weights/manifests/` and writes relative configuration. It excludes private editor results, uploads, process records and the old virtual environment. It does not create symlinks or require the old tree after import. `--dry-run` previews the selection. Different existing destination files/configuration are rejected by default; `--overwrite` is an explicit replacement option. The import manifest preserves historical source paths and file hashes for provenance, rather than creating a runtime dependency on that source directory. Public source and test data are tracked separately from these large assets.
 
-For resources already in an earlier Studio layout, stop that checkout's server and run the migration utility:
+For resources already in an earlier local layout, stop that checkout's server with **Ctrl+C** first. If it was launched in the background by an older version, use that checkout's `manage.cmd stop` to stop the verified recorded process. Then run the migration utility:
 
 ```powershell
-.\manage.cmd stop
 .\.venv\Scripts\python.exe scripts/migrate_weights.py
 .\.venv\Scripts\python.exe scripts/migrate_weights.py --apply
 .\manage.cmd doctor
@@ -96,12 +104,14 @@ Bare invocation and `--dry-run` only show the plan. `--apply` performs hash-chec
 | `weights/sd15/` | SD 1.5 UNet, VAE, text encoder, tokenizer and configuration |
 | `weights/ip-adapter/models/image_encoder/` | IP-Adapter CLIP image encoder |
 | `weights/ip-adapter/ip-adapter_sd15.bin` | IP-Adapter SD 1.5 parameters |
-| `weights/faceparser/FaceParser.pth` | Optional legacy face-parser resource; not used by the default editor path |
+| `weights/faceparser/FaceParser.pth` | Optional historical resource; the unused face-parser code is outside the active application |
 | `weights/mtcnn-attack/pnet-6b6ef92b.pth` | Optional FaceShield detection resource; not required by the default editor branch |
 | `weights/manifests/` | Resource download/import/migration records and observed hashes |
 | `weights/cache/huggingface/` | Optional Hugging Face library download cache; managed launchers use this `HF_HOME` |
 
 SD UNet, VAE and text encoder retain their `.fp16.safetensors` filenames for variant-aware loading. `manage.cmd models` prepares the base files and small public PhantomSeal/SimSwap components. The full author archives remain a separate download; sources and terms are listed in [Provenance](PROVENANCE.md).
+
+The integrated runtime uses explicit local weight paths. Resource caches belong under `weights/cache/` and application temporary files under `.cache/tmp/`. Import manifests may contain the old source location as a historical record, but the loader never uses that location. A Git clone alone excludes `.runtime/`, `.venv/`, weights and generated assets; run setup and prepare the resources before using it.
 
 ## Processing and memory
 
@@ -120,7 +130,9 @@ The HifiFace heads come from the full final checkpoint, matching upstream's over
 
 Cloak selection uses a CPU FaceNet index of all detectable images in the 214-photo bank. It selects a distance nearest 1.20 among candidates above 1.04. Image, weight and preprocessing fingerprints invalidate the index when those inputs change. A cached index reduces repeated startup work; it does not replace the original bank's provenance.
 
-FaceShield uses frozen evaluation models, sequential perturbation gradients and CUDA half precision where applicable. After reference computations it moves the VAE back to CPU and discards the text encoder. Its diffusion analysis runs on a differentiable 512 px view while the delta remains at output resolution. The default follows the original `run.sh` non-MTCNN branch. These adaptations and the 256 px face view make the local application different from a literal reproduction of either paper's evaluation protocol.
+FaceShield uses frozen evaluation models, sequential perturbation gradients and CUDA half precision where applicable. After reference computations it moves the VAE back to CPU and discards the text encoder. Its diffusion analysis runs on a differentiable 512 px view while the delta remains at output resolution. The default follows the original upstream non-MTCNN configuration. These adaptations and the 256 px face view make the local application different from a literal reproduction of either paper's evaluation protocol.
+
+`protector.py` is the maintained FaceShield runtime and CLI. The original Linux/distributed training-era launch scripts are outside the active application; consult the [historical upstream README](UPSTREAM_README.md) and upstream repository for that research setup.
 
 Only feature encoders needed by PhantomSeal's objective are loaded. FaceShifter/HifiFace synthesis generators, discriminators, Lightning training modules and the BFM renderer are unnecessary for those feature losses. The two defense engines release GPU models between stages. The SimSwap test generator is loaded for testing, not retained alongside a running protection job.
 
@@ -152,12 +164,25 @@ The server accepts loopback hosts on its configured port, rejects foreign origin
 
 ```powershell
 .\manage.cmd test
+.\manage.cmd smoke
 .\manage.cmd benchmark-help
 .\manage.cmd benchmark -Sources 1 -OutputDir "results\benchmarks\quick"
 ```
 
-The management test command hides CUDA, runs PowerShell lifecycle tests and Python `unittest` discovery, then runs `tests/frontend-check.cjs` if Node.js is available. It verifies dimensions/no upscale, perturbation bounds, preprocessing gradients, sequential loss equivalence, safe loader contracts, route validation, jobs, baseline failures, source weighting, benchmark resume integrity and UI state/export behavior. Many tests use dummy engines; their success does not establish defense efficacy.
+The management test command hides CUDA, runs PowerShell lifecycle tests and Python `unittest` discovery, then runs `tests/frontend-check.cjs` when the project-local Node.js runtime is available. It verifies dimensions/no upscale, perturbation bounds, preprocessing gradients, sequential loss equivalence, safe loader contracts, route validation, jobs, baseline failures, source weighting, benchmark resume integrity and UI state/export behavior. Many tests use dummy engines; their success does not establish defense efficacy.
+
+`smoke` executes the full installed model path without an HTTP server: a public source enlarged to 1280 px, 10 PhantomSeal steps, 1 FaceShield step including the optional attack detector, then six real SimSwap outputs across PNG/JPEG95. The probe blocks Python socket resolution/connection attempts and records file access, loaded module paths, model paths and interpreter isolation. Its JSON report lives under `results/verification/`. The audit covers observed Python-level access and imports; it is not an OS sandbox or proof about every native DLL system call. Host Windows/NVIDIA components remain necessary.
+
+For the lightweight Python path audit alone:
+
+```powershell
+.\.venv\Scripts\python.exe -I scripts/manage_checks.py runtime --root .
+```
 
 The full benchmark manifest is `benchmark_manifest.json`. Protection outputs are reused only after resume integrity checks. A comparison is keyed by `(source_id, target_id, condition)`. Reports keep PNG and JPEG95 separate, report invalid/detection/weak-baseline counts, and average target-level deltas within each source before equal weighting across sources. They do not report p-values or an attack-success rate from uncalibrated cosine values.
 
-Keep `weights/**` out of commits except its tracked placement guide `weights/README.md`. The full bank, binary models, resource manifests and Hugging Face resource cache share that ignored tree. Keep external archives, `.venv`, other caches, private photos and generated editor jobs out of commits as well. Versioned sanitized numerical evidence belongs under `docs/evidence/`; full public HTML/image bundles can be retained locally under ignored `results/benchmarks/`.
+Keep `weights/**` out of commits except its tracked placement guide `weights/README.md`. The full bank, binary models, resource manifests and Hugging Face resource cache share that ignored tree. Keep archives, `.runtime/`, `.venv/`, other caches, private photos and generated editor jobs out of commits as well. Versioned sanitized numerical evidence belongs under `docs/evidence/`; full public HTML/image bundles can be retained locally under ignored `results/benchmarks/`.
+
+## Additional model adapters
+
+The `nullswap` mode instantiates only its own generator and detector. SimSwap evaluation loads only its identity encoder, generator and evaluator, independently of the PhantomSeal cloak bank or other ensemble heads. Each new swap adapter owns its preprocessing and native output resolution; the common evaluator compares quantized outputs to the same original identity and catches typed native-alignment failures as null-score rows. Other runtime errors remain job failures. One shared job lock prevents overlapping protection and testing. See [NEW_MODELS.md](NEW_MODELS.md) for implementation provenance and differences.

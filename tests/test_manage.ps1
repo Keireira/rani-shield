@@ -59,19 +59,29 @@ try {
     Assert-True (-not (Test-OwnedHealth $record $fakeProcess)) 'Healthy HTTP from a foreign listener must not count as owned.'
     function Get-PortListener { return [pscustomobject]@{OwningProcess=12345} }
     Assert-True (Test-OwnedHealth $record $fakeProcess) 'Owned listener plus successful HTTP health should pass.'
-    foreach ($action in @('setup','models','doctor','run','stop','status','test','benchmark','benchmark-help')) {
+    foreach ($action in @('setup','models','doctor','run','stop','status','test','smoke','smoke-extra','benchmark','benchmark-help')) {
         $plan = (& $scriptPath -Command $action -ProjectRoot $fixture -DryRun 6>&1 | Out-String -Width 32767)
         Assert-True ($plan -match '\[dry-run\]') "$action has no dry-run plan."
     }
     $plan = (& $scriptPath configure -ProjectRoot $fixture -Checkpoints 'D:\Models with spaces\checkpoints' -Cloaks 'D:\Data with spaces\mix_full' -DryRun 6>&1 | Out-String -Width 32767)
     Assert-True ($plan.Contains('"D:\Models with spaces\checkpoints"')) 'Configure must retain a spaced path as one argument.'
+    $plan = (& $scriptPath import-models -ProjectRoot $fixture -Checkpoints 'D:\Models with spaces\checkpoints.zip' -ModelSet diffswap -DryRun 6>&1 | Out-String -Width 32767)
+    Assert-True ($plan.Contains('"D:\Models with spaces\checkpoints.zip"') -and $plan.Contains('"--models" "diffswap"')) 'Optional model import must forward archive path and model selection.'
     $plan = (& $scriptPath benchmark -ProjectRoot $fixture -Port 7876 -Sources 1 -OutputDir 'results\trial with spaces' -DryRun 6>&1 | Out-String -Width 32767)
     Assert-True ($plan.Contains('"--resume"') -and $plan.Contains('"--max-sources" "1"') -and $plan.Contains('"--port" "7876"') -and $plan.Contains('trial with spaces')) 'Benchmark plan must forward resume/source/output/port arguments.'
     $rejected = $false
     try { & $scriptPath run -ProjectRoot $fixture -Port 1 -DryRun } catch { $rejected = $true }
     Assert-True $rejected 'Invalid port must be rejected before execution.'
     Assert-True (@(Get-ChildItem -LiteralPath $fixture -Force).Count -eq 0) 'Dry-run must not create files.'
-    Write-Host 'PASS: PowerShell parsing; spaced/quoted arguments; PID/root/executable/command-line ownership; actual venv child listener identity; HTTP listener ownership; all dry-run actions; benchmark forwarding; port validation; no dry-run writes.'
+    New-Item -ItemType Directory -Path (Join-Path $fixture '.venv') | Out-Null
+    $versionConfig = Join-Path $fixture '.venv\pyvenv.cfg'
+    Set-Content -LiteralPath $versionConfig -Value 'version = 3.12.9'
+    $versionRejected = $false
+    try { Install-LocalRuntime } catch { $versionRejected = $_.Exception.Message -match 'different Python version' }
+    Assert-True $versionRejected 'Setup must reject an incompatible existing venv before replacing its interpreter.'
+    Assert-True ((Get-Content -LiteralPath $versionConfig -Raw).Trim() -eq 'version = 3.12.9') 'Rejected setup must preserve the existing venv configuration.'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $fixture '.runtime'))) 'Rejected setup must not provision a new runtime.'
+    Write-Host 'PASS: PowerShell parsing; spaced/quoted arguments; PID/root/executable/command-line ownership; actual venv child listener identity; HTTP listener ownership; all dry-run actions; benchmark forwarding; port validation; no dry-run writes; incompatible Python setup preserves existing environment.'
 }
 finally {
     # Delete only the exact fresh temporary fixture created by this test.

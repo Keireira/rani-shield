@@ -1,9 +1,10 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('help', 'setup', 'models', 'configure', 'doctor', 'run', 'stop', 'status', 'test', 'benchmark', 'benchmark-help')]
+    [ValidateSet('help', 'setup', 'models', 'import-models', 'configure', 'doctor', 'run', 'stop', 'status', 'test', 'smoke', 'smoke-extra', 'benchmark', 'benchmark-help')]
     [string]$Command = 'help',
     [ValidateRange(1024, 65535)][int]$Port = 7876,
     [string]$Checkpoints,
+    [ValidateSet('all', 'nullswap', 'diffswap', 'infoswap', 'uniface')][string]$ModelSet = 'all',
     [string]$Cloaks,
     [string]$Python311,
     [ValidateRange(0, 10000)][int]$Sources = 0,
@@ -19,6 +20,8 @@ $ErrorActionPreference = 'Stop'
 if (-not $ProjectRoot) { $ProjectRoot = $PSScriptRoot }
 $script:Root = [IO.Path]::GetFullPath($ProjectRoot)
 $script:Python = Join-Path $script:Root '.venv\Scripts\python.exe'
+$script:BasePython = Join-Path $script:Root '.runtime\python\python.exe'
+$script:Node = Join-Path $script:Root '.runtime\node\node.exe'
 $script:Checks = Join-Path $script:Root 'scripts\manage_checks.py'
 $script:StateDir = Join-Path $script:Root '.cache\manage'
 $script:PidFile = Join-Path $script:StateDir 'server.json'
@@ -48,18 +51,88 @@ function Require-Python {
     }
 }
 
+function Set-ProjectEnvironment {
+    $contract = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'scripts\runtime_environment.json') -Raw | ConvertFrom-Json
+    $previous = @{}
+    $values = @{}
+    foreach ($property in $contract.cache_paths.PSObject.Properties) {
+        $path = Resolve-ProjectPath $property.Value
+        $ancestor = $path
+        while ($ancestor -and $ancestor -ine $script:Root) {
+            $existing = Get-Item -LiteralPath $ancestor -Force -ErrorAction SilentlyContinue
+            if ($existing -and ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+                throw "Runtime cache cannot traverse links or junctions: $ancestor"
+            }
+            $ancestor = Split-Path -Parent $ancestor
+        }
+        if (-not $ancestor) { throw "Runtime cache escaped the project: $path" }
+        $item = New-Item -ItemType Directory -Path $path -Force
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Runtime cache must be a local directory: $path" }
+        $values[$property.Name] = $path
+    }
+    foreach ($property in $contract.settings.PSObject.Properties) { $values[$property.Name] = [string]$property.Value }
+    foreach ($name in $contract.unset) { $values[$name] = $null }
+    foreach ($name in $values.Keys) {
+        $previous[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+        [Environment]::SetEnvironmentVariable($name, $values[$name], 'Process')
+    }
+    return $previous
+}
+
+function Restore-ProjectEnvironment($Previous) {
+    foreach ($name in $Previous.Keys) { [Environment]::SetEnvironmentVariable($name, $Previous[$name], 'Process') }
+}
+
+function Assert-LocalRuntime {
+    if ($DryRun) { return }
+    $runtime = (& $script:Python -I $script:Checks runtime --root $script:Root | ConvertFrom-Json)
+    if ($LASTEXITCODE -ne 0 -or -not $runtime.ready) {
+        throw ('Python still depends on files outside this project. Run manage.cmd setup. ' + ($runtime.errors -join '; '))
+    }
+}
+
+function Install-LocalRuntime {
+    $bootstrap = Join-Path $script:Root 'scripts\bootstrap_runtime.py'
+    $venvConfig = Join-Path $script:Root '.venv\pyvenv.cfg'
+    if (Test-Path -LiteralPath $venvConfig -PathType Leaf) {
+        $configuredVersion = [regex]::Match((Get-Content -LiteralPath $venvConfig -Raw), '(?m)^version\s*=\s*(\d+\.\d+)')
+        if ($configuredVersion.Success -and $configuredVersion.Groups[1].Value -ne '3.11') {
+            throw 'Existing .venv uses a different Python version. Rebuild it manually before setup; incompatible installed packages will not be overwritten.'
+        }
+    }
+    if (-not (Test-Path -LiteralPath $script:BasePython -PathType Leaf)) {
+        if ($Python311) { $sourcePython = $Python311 }
+        elseif (Get-Command py.exe -ErrorAction SilentlyContinue) {
+            $sourcePython = & py.exe -3.11 -c 'import sys; print(sys.executable)'
+            if ($LASTEXITCODE -ne 0) { throw 'Could not find Python 3.11 with py.exe.' }
+        }
+        else { throw 'Install CPython 3.11 once or pass -Python311 "C:\path\python.exe". Setup copies its runtime into .runtime\python.' }
+        $sourceRoot = & $sourcePython -c 'import sys; assert sys.version_info[:2] == (3, 11), "Python 3.11 required"; print(sys.base_prefix)'
+        if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the Python 3.11 source installation.' }
+        Invoke-Checked $sourcePython @($bootstrap, '--root', $script:Root, '--source', $sourceRoot)
+    }
+    # Refresh redirectors/configuration in-place and preserve installed packages.
+    Invoke-Checked $script:BasePython @('-m', 'venv', (Join-Path $script:Root '.venv'))
+    Invoke-Checked $script:Python @($bootstrap, '--root', $script:Root, '--refresh-scripts')
+    Assert-LocalRuntime
+    if (-not (Test-Path -LiteralPath $script:Node -PathType Leaf)) {
+        $nodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue
+        if ($nodeCommand) {
+            $nodeLicense = @('LICENSE', 'LICENSE.txt') | ForEach-Object { Join-Path (Split-Path -Parent $nodeCommand.Source) $_ } | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+            if ($nodeLicense) { Invoke-Checked $script:Python @($bootstrap, '--root', $script:Root, '--node-source', $nodeCommand.Source, '--node-license', $nodeLicense) }
+            else { Write-Host 'Optional frontend checks need .runtime\node\node.exe plus LICENSE. See README for Node setup.' }
+        }
+    }
+}
+
 function Install-Environment {
     if ($DryRun) {
-        Write-Host '[dry-run] Create Python 3.11 .venv only if absent; verify installed package versions first.'
+        Write-Host '[dry-run] Copy CPython 3.11 into .runtime\python if absent; refresh .venv locally, preserving installed packages; verify package versions first.'
         Invoke-Checked $script:Python @('-m', 'pip', 'install', 'torch==2.7.1+cu128', 'torchvision==0.22.1+cu128', '--index-url', 'https://download.pytorch.org/whl/cu128')
         Invoke-Checked $script:Python @('-m', 'pip', 'install', '-r', (Join-Path $script:Root 'requirements-windows.txt'))
         return
     }
-    if (-not (Test-Path -LiteralPath $script:Python -PathType Leaf)) {
-        if ($Python311) { Invoke-Checked $Python311 @('-m', 'venv', (Join-Path $script:Root '.venv')) }
-        elseif (Get-Command py.exe -ErrorAction SilentlyContinue) { Invoke-Checked 'py.exe' @('-3.11', '-m', 'venv', (Join-Path $script:Root '.venv')) }
-        else { throw 'Install Python 3.11 with the Windows py launcher, or pass -Python311 "C:\path\python.exe".' }
-    }
+    Install-LocalRuntime
     $report = (& $script:Python $script:Checks environment --root $script:Root | ConvertFrom-Json)
     if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the local environment.' }
     if (-not $report.python_ready) { throw 'Existing .venv is not Python 3.11. Select a separate project directory or rebuild it manually; setup will not delete it.' }
@@ -78,19 +151,9 @@ function Install-Environment {
 
 function Install-Models {
     Require-Python
+    Assert-LocalRuntime
     Invoke-Checked $script:Python @((Join-Path $script:Root 'download_models.py'))
     Invoke-Checked $script:Python @((Join-Path $script:Root 'download_phantomseal.py'), '--root', $script:Root)
-    $adapter = Join-Path $script:Root 'weights\ip-adapter\ip-adapter_sd15.bin'
-    if (-not (Test-Path -LiteralPath $adapter -PathType Leaf) -or (Get-Item -LiteralPath $adapter).Length -eq 0) {
-        $url = 'https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15.bin'
-        if ($DryRun) { Write-Host "[dry-run] Download missing IP-Adapter: $url -> $adapter" }
-        else {
-            New-Item -ItemType Directory -Path (Split-Path -Parent $adapter) -Force | Out-Null
-            $partial = $adapter + '.part'
-            Invoke-WebRequest -Uri $url -OutFile $partial -UseBasicParsing
-            Move-Item -LiteralPath $partial -Destination $adapter -Force
-        }
-    }
     Write-Host 'Public downloads reuse existing files. Full PhantomSeal checkpoints and mix_full bank: manage.cmd configure.'
 }
 
@@ -190,64 +253,40 @@ function Show-Status {
         Write-Host "Managed server PID $($owned.Id): healthy=$healthy; http://127.0.0.1:$($record.port)"
         Write-Host "Logs: $script:StateDir"
     }
-    elseif (Get-PortListener $Port) { Write-Host "Port $Port is occupied by an unmanaged process. It will not be adopted or stopped." }
-    else { Write-Host 'Managed server is not running.' }
+    elseif (Get-PortListener $Port) { Write-Host "Port $Port is occupied. Foreground servers stop with Ctrl+C in their terminal; this process will not be adopted or stopped." }
+    else { Write-Host "No legacy background server is running; port $Port has no listener." }
 }
 
 function Start-Server {
     Require-Python
+    Assert-LocalRuntime
     $gui = Join-Path $script:Root 'gui.py'
     $arguments = @('-u', $gui, '--host', '127.0.0.1', '--port', [string]$Port, '--no-browser')
     if ($DryRun) {
-        Write-Host "[dry-run] Check owned PID, refuse an occupied port, then start hidden on $Port; write own PID/start time and logs."
+        Write-Host "[dry-run] Refuse an occupied port or an existing legacy background server; run in this terminal on $Port until exit. Stream logs here; Ctrl+C stops the server."
         Invoke-Checked $script:Python $arguments
         return
     }
     $record = Read-ServerRecord
     $owned = Get-OwnedServer $record
     if ($owned) {
-        if ([int]$record.port -ne $Port) { throw "A managed server is already running on $($record.port). Stop it before changing ports." }
-        if (Test-OwnedHealth $record $owned) { Write-Host "Already running: http://127.0.0.1:$Port (PID $($owned.Id))"; return }
-        throw "Managed server exists but is not healthy. Check $script:StateDir or use stop."
+        throw "A legacy background server is still running on $($record.port) (PID $($owned.Id)). Stop it once with manage.cmd stop, then run again to use this terminal."
     }
     if (Get-PortListener $Port) { throw "Port $Port is occupied. Use -Port with a free port; no process was changed." }
-    New-Item -ItemType Directory -Path $script:StateDir -Force | Out-Null
     $oldEnvironment = @{}
-    foreach ($name in @('FACESHIELD_PORT', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'HF_HOME')) { $oldEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process') }
+    foreach ($name in @('FACESHIELD_PORT', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS')) { $oldEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process') }
     try {
         $env:FACESHIELD_PORT = [string]$Port; $env:OMP_NUM_THREADS = '4'; $env:MKL_NUM_THREADS = '4'
-        $env:HF_HOME = Join-Path $script:Root 'weights\cache\huggingface'
-        $nativeArguments = ($arguments | ForEach-Object { Quote-NativeArgument $_ }) -join ' '
-        $started = Start-Process -FilePath $script:Python -ArgumentList $nativeArguments -WorkingDirectory $script:Root -WindowStyle Hidden -RedirectStandardOutput (Join-Path $script:StateDir 'server.stdout.log') -RedirectStandardError (Join-Path $script:StateDir 'server.stderr.log') -PassThru
-        $launcherCim = Get-CimInstance Win32_Process -Filter ('ProcessId=' + [int]$started.Id) -ErrorAction Stop
-        $launcherRecord = New-ServerRecord $started $Port $null $launcherCim
-        Write-Verbose ("Launched process identity: " + ($launcherRecord | ConvertTo-Json -Compress))
+        Write-Host "Running in this terminal: http://127.0.0.1:$Port. Press Ctrl+C to stop."
+        # Inherit the console and its control events. Do not detach or redirect:
+        # Python/Uvicorn owns the lifetime and emits logs directly to this terminal.
+        & $script:Python @arguments
+        $serverExitCode = $LASTEXITCODE
+        if ($serverExitCode -notin @(0, 130, -1073741510)) {
+            throw "Server exited with code $serverExitCode. See the terminal output above."
+        }
     }
     finally { foreach ($name in $oldEnvironment.Keys) { [Environment]::SetEnvironmentVariable($name, $oldEnvironment[$name], 'Process') } }
-    $deadline = [DateTime]::UtcNow.AddSeconds(45)
-    do {
-        $started.Refresh()
-        $launcherAlive = -not $started.HasExited
-        $listeners = Get-PortListener $Port
-        Write-Verbose "Waiting for port $Port; launcher PID $($launcherRecord.pid) alive=$launcherAlive."
-        foreach ($listener in $listeners) {
-            try {
-                $server = Get-Process -Id $listener.OwningProcess -ErrorAction Stop
-                $cim = Get-CimInstance Win32_Process -Filter ('ProcessId=' + [int]$listener.OwningProcess) -ErrorAction Stop
-                $matchesLaunch = Test-LaunchedServer $launcherRecord $server $cim
-                Write-Verbose "Listener PID $($server.Id), parent PID $($cim.ParentProcessId), start ticks $($server.StartTime.ToUniversalTime().Ticks), matches launch=$matchesLaunch."
-                if ($launcherAlive -and $matchesLaunch) {
-                    $newRecord = New-ServerRecord $server $Port $launcherRecord $cim
-                    $newRecord | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $script:PidFile -Encoding UTF8
-                    if (Test-Health $Port) { Write-Host "Ready: http://127.0.0.1:$Port (PID $($server.Id))"; return }
-                }
-            }
-            catch { Write-Verbose "Listener identity is not available yet: $_" }
-        }
-        if (-not $launcherAlive) { throw "Server launcher exited. Read $script:StateDir\server.stderr.log" }
-        Start-Sleep -Milliseconds 400
-    } while ([DateTime]::UtcNow -lt $deadline)
-    throw "Server did not become healthy within 45 seconds; it was left running. Use status, inspect logs, or stop."
 }
 
 function Stop-Server {
@@ -267,15 +306,17 @@ function Invoke-Tests {
     try {
         $env:CUDA_VISIBLE_DEVICES = '-1'; $env:FACESHIELD_ROOT = $script:Root
         Invoke-Checked 'powershell.exe' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $script:Root 'tests\test_manage.ps1'))
+        Invoke-Checked 'powershell.exe' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $script:Root 'tests\test_foreground_run.ps1'))
         Invoke-Checked $script:Python @('-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py', '-v')
-        if (Get-Command node.exe -ErrorAction SilentlyContinue) { Invoke-Checked 'node.exe' @((Join-Path $script:Root 'tests\frontend-check.cjs')) }
-        else { Write-Host 'Node.js not found; optional frontend regression skipped.' }
+        if (Test-Path -LiteralPath $script:Node -PathType Leaf) { Invoke-Checked $script:Node @((Join-Path $script:Root 'tests\frontend-check.cjs')) }
+        else { Write-Host 'Local .runtime\node\node.exe not found; optional frontend regression skipped.' }
     }
     finally { $env:CUDA_VISIBLE_DEVICES = $oldCuda; $env:FACESHIELD_ROOT = $oldRoot }
 }
 
 function Invoke-Benchmark {
     Require-Python
+    Assert-LocalRuntime
     $arguments = @((Join-Path $script:Root 'benchmark_suite.py'))
     if ($Command -eq 'benchmark-help') { $arguments += '--help' }
     else {
@@ -287,20 +328,25 @@ function Invoke-Benchmark {
 }
 
 if ($LibraryOnly) { return }
+$previousEnvironment = @{}
 try {
+    if (-not $DryRun -and $Command -notin @('help', 'status', 'stop')) { $previousEnvironment = Set-ProjectEnvironment }
     Push-Location -LiteralPath $script:Root
     try {
         switch ($Command) {
             help { Write-Host @'
-FaceShield Windows commands (make is optional)
-  manage.cmd setup             Create/reuse Python 3.11 + pinned CUDA 12.8 environment
+Rani Shield Windows commands (make is optional)
+  manage.cmd setup             Copy local Python runtime; prepare pinned CUDA 12.8 packages
   manage.cmd models            Download public base weights; reuse present files
-  manage.cmd configure -Checkpoints "D:\models\checkpoints" -Cloaks "D:\data\vggface2_cloak\mix_full"
+  manage.cmd import-models -Checkpoints "PATH\TO\checkpoints" [-ModelSet all]
+  manage.cmd configure -Checkpoints "weights" -Cloaks "weights\phantomseal\cloaks\mix_full"
   manage.cmd doctor            Check dependencies, CUDA, 4 branches and full 214-face bank
-  manage.cmd run [-Port 7876]   Start hidden; reuse this tool's healthy server
-  manage.cmd status            Show managed PID/HTTP health
-  manage.cmd stop              Stop only this tool's verified process
+  manage.cmd run [-Port 7876]   Run in this terminal with live logs; Ctrl+C stops
+  manage.cmd status            Inspect port / legacy background server health
+  manage.cmd stop              Stop a verified background server from older versions
   manage.cmd test              Run CPU contract tests; optional Node frontend tests
+  manage.cmd smoke             Check real 1280px GPU chain and swaps without a server
+  manage.cmd smoke-extra       Check NullSwap1280 and all four swappers PNG/JPEG95; no server
   manage.cmd benchmark         Run/resume 36 pairs / 108 swaps (GPU, about 10 minutes)
   manage.cmd benchmark -Sources 1 -OutputDir "results\benchmarks\quick"
   manage.cmd benchmark-help    Show benchmark options
@@ -308,6 +354,11 @@ Add -DryRun to print a plan without installing, writing, starting or stopping.
 '@ }
             setup { Install-Environment }
             models { Install-Models }
+            import-models {
+                Require-Python
+                if (-not $Checkpoints) { throw 'Supply -Checkpoints pointing at an extracted checkpoint directory or archive.' }
+                Invoke-Checked $script:Python @((Join-Path $script:Root 'scripts\import_swap_assets.py'), '--checkpoints', (Resolve-ProjectPath $Checkpoints), '--models', $ModelSet)
+            }
             configure {
                 Require-Python
                 if (-not $Checkpoints -or -not $Cloaks) { throw 'Supply -Checkpoints and -Cloaks, pointing at already extracted directories. See help.' }
@@ -318,9 +369,12 @@ Add -DryRun to print a plan without installing, writing, starting or stopping.
             stop { Stop-Server }
             status { Show-Status }
             test { Invoke-Tests }
+            smoke { Require-Python; Assert-LocalRuntime; Invoke-Checked $script:Python @((Join-Path $script:Root 'scripts\smoke_check.py')) }
+            smoke-extra { Require-Python; Assert-LocalRuntime; Invoke-Checked $script:Python @((Join-Path $script:Root 'scripts\smoke_check.py'), '--mode', 'nullswap', '--backends', 'simswap', 'diffswap', 'infoswap', 'uniface') }
             { $_ -in @('benchmark', 'benchmark-help') } { Invoke-Benchmark }
         }
     }
     finally { Pop-Location }
 }
 catch { Write-Error $_; exit 1 }
+finally { Restore-ProjectEnvironment $previousEnvironment }

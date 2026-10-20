@@ -1,0 +1,61 @@
+{
+  "application": "Rani Shield",
+  "date_utc": "2026-10-20T17:39:29.888454+00:00",
+  "purpose": "Reduced-step execution and local-dependency verification; not an efficacy evaluation.",
+  "source": "Upscaled public repository portrait, not native 1280-resolution evidence.",
+  "python": ".venv\\Scripts\\python.exe",
+  "python_base": ".runtime\\python",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "elapsed_seconds": 38.36,
+  "dimensions": [
+    1280,
+    1280
+  ],
+  "phantomseal_steps": 10,
+  "faceshield_steps": 1,
+  "optional_mtcnn_enabled": true,
+  "swap_rows": 6,
+  "conditions": [
+    "png",
+    "jpeg95"
+  ],
+  "outside_python_file_accesses": [],
+  "outside_module_files": [],
+  "network_attempts": [],
+  "model_files": [
+    "weights/facenet/facenet_vggface2.pt",
+    "weights/faceshield/arcface100_checkpoint.tar",
+    "weights/faceshield/arcface50_checkpoint.tar",
+    "weights/faceshifter/model_ir_se50.pth",
+    "weights/hififace/hififace_opensource_299999.ckpt",
+    "weights/ip-adapter/ip-adapter_sd15.bin",
+    "weights/ip-adapter/models/image_encoder/model.safetensors",
+    "weights/mtcnn-attack/pnet-6b6ef92b.pth",
+    "weights/mtcnn/onet.pt",
+    "weights/mtcnn/pnet.pt",
+    "weights/mtcnn/rnet.pt",
+    "weights/sd15/text_encoder/model.fp16.safetensors",
+    "weights/sd15/unet/diffusion_pytorch_model.fp16.safetensors",
+    "weights/sd15/vae/diffusion_pytorch_model.fp16.safetensors",
+    "weights/simswap/arcface_checkpoint.tar",
+    "weights/simswap/latest_net_G.pth"
+  ],
+  "models_outside_weights": [],
+  "audit_scope": "Python open events, imported module files, torch.load and safetensors.safe_open inputs. OS/driver native file access is not traced.",
+  "passed": true,
+  "automated_checks": {
+    "python_discovered": 111,
+    "python_passed": 109,
+    "python_skipped": 2,
+    "skip_reason": "Windows 8.3 aliases are unavailable on drive F; two dedicated alias fixtures are skipped there. Canonical-path contracts pass.",
+    "powershell_passed": true,
+    "frontend_passed": true,
+    "pip_check_passed": true,
+    "doctor_passed": true,
+    "setup_no_downloads_passed": true,
+    "github_actions_executed_remotely": false
+  },
+  "filesystem_links_found": [],
+  "imported_phantomseal_cache_records_verified": 216,
+  "server_started": false
+}

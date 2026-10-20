@@ -261,7 +261,8 @@ class EditorAPITests(unittest.TestCase):
         protection = self.completed_protection()
         self.studio._test_runner = None
         with patch("protection_test.testing_readiness", return_value={"ready": False,
-                   "message": "Missing test files: weights/simswap/latest_net_G.pth", "targets": []}):
+                   "message": "Missing test files: weights/simswap/latest_net_G.pth", "targets": [],
+                   "backends": {"simswap": {"ready": False, "message": "Missing weights/simswap/latest_net_G.pth"}}}):
             response = self.client.post("/api/test", json={"result_id": protection["result"]["id"], "target_key": "cage"})
         self.assertEqual(response.status_code, 503)
         self.assertIn("latest_net_G.pth", response.json()["error"])
@@ -277,6 +278,35 @@ class EditorAPITests(unittest.TestCase):
             self.assertFalse(condition["rows"][-1]["swap_detected"])
             self.assertIsNone(condition["rows"][-1]["score"])
             self.assertIsNone(condition["delta_final_minus_stage1"])
+
+    def test_backend_selection_is_validated_and_preserved_in_jobs(self):
+        protection = self.completed_protection()
+        payload = {"result_id": protection["result"]["id"], "target_key": "cage", "jpeg95": False}
+        for backend in ("../diffswap", "unknown", [], True, None):
+            response = self.client.post("/api/test", json={**payload, "backend": backend})
+            self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.test_runner.calls, [])
+        for backend in ("simswap", "diffswap", "infoswap", "uniface"):
+            response = self.client.post("/api/test", json={**payload, "backend": backend})
+            self.assertEqual(response.status_code, 202, response.text)
+            job = self.wait_job(response.json()["id"])
+            self.assertEqual(job["status"], "done", job.get("error"))
+            self.assertEqual(job["backend"], backend)
+            self.assertEqual(job["test"]["backend"], backend)
+            self.assertEqual(self.test_runner.calls[-1]["backend"], backend)
+
+    def test_unavailable_selected_backend_cannot_fall_back_to_another(self):
+        protection = self.completed_protection()
+        statuses = {"ready": True, "backends": {
+            "simswap": {"ready": True, "message": "Ready"},
+            "diffswap": {"ready": False, "message": "Missing diffswap.pth"}}}
+        with patch.object(self.studio, "testing_readiness", return_value=statuses):
+            response = self.client.post("/api/test", json={
+                "result_id": protection["result"]["id"], "target_key": "cage", "backend": "diffswap"})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("diffswap.pth", response.json()["error"])
+        self.assertEqual(self.test_runner.calls, [])
+        self.assertIsNone(self.studio.active)
 
     def test_protection_test_cannot_publish_a_runner_output_outside_its_test_folder(self):
         protection = self.completed_protection()
@@ -436,6 +466,30 @@ class EditorAPITests(unittest.TestCase):
         a, b = self.upload(64, 32), self.upload(32, 32)
         response = self.client.post("/api/compare", json={"source_id": a["id"], "result_id": b["id"]})
         self.assertEqual(response.status_code, 400)
+
+    def test_nullswap_controls_roundtrip_and_legacy_defaults(self):
+        original = self.upload()
+        for params, strength, seed in (({"mode": "nullswap"}, 1, 0),
+                                      ({"mode": "nullswap", "nullswap_strength": 2.75,
+                                        "nullswap_seed": 4294967295}, 2.75, 4294967295)):
+            response = self.client.post("/api/process", json={"source_id": original["id"], "params": params})
+            self.assertEqual(response.status_code, 202, response.text)
+            job = self.wait_job(response.json()["id"])
+            self.assertEqual(job["status"], "done", job.get("error"))
+            for values in (job["params"], self.protection_calls[-1]):
+                self.assertEqual(values["nullswap_strength"], strength)
+                self.assertEqual(values["nullswap_seed"], seed)
+
+    def test_invalid_nullswap_controls_rejected_before_queueing(self):
+        original = self.upload()
+        for key, values in (("nullswap_strength", (-.1, 4.1, "1", True)),
+                            ("nullswap_seed", (-1, 2**32, .5, "0", True))):
+            for value in values:
+                response = self.client.post("/api/process", json={"source_id": original["id"],
+                    "params": {"mode": "nullswap", key: value}})
+                self.assertEqual(response.status_code, 400, response.text)
+        self.assertEqual(self.factory_calls, 0)
+        self.assertIsNone(self.studio.active)
 
 
 if __name__ == "__main__":

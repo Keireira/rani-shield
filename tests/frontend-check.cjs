@@ -51,7 +51,7 @@ const context = {
 };
 context.globalThis=context;
 const source=fs.readFileSync(path.join(root,'app.js'),'utf8').replace(/\ninitialize\(\);\s*$/,'');
-vm.runInNewContext(source+'\nglobalThis.test={state,settings,normalizedSettings,applySettings,diffImage,useSource,useResult,processImage,openSettingsDialog,closeSettingsDialog,saveSettingsDialog,updateCards,restoreSelection,watchJob,busy,syncMethodControls,readPresets,savePreset,selectPreset,downloadStage1,download,testEligible,startProtectionTest,watchTestJob,openTestDialog,closeTestDialog,renderTestResults,invalidateTest,resumeActiveJob,baselineGate,setVisualBaseline,changeBaselineCutoff};', context);
+vm.runInNewContext(source+'\nglobalThis.test={state,settings,normalizedSettings,applySettings,diffImage,useSource,useResult,processImage,openSettingsDialog,closeSettingsDialog,saveSettingsDialog,updateCards,restoreSelection,watchJob,busy,syncMethodControls,readPresets,savePreset,selectPreset,downloadStage1,download,testEligible,startProtectionTest,watchTestJob,openTestDialog,closeTestDialog,renderTestResults,invalidateTest,resumeActiveJob,baselineGate,setVisualBaseline,changeBaselineCutoff,changeTestBackend};', context);
 const t=context.test;
 const descendants = node => [node,...(node.children||[]).flatMap(descendants)];
 const renderedText = node => descendants(node).map(item=>item.textContent||'').join(' ');
@@ -66,6 +66,14 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   assert.match(html,/<dt>License<\/dt><dd>Research version:/,'License information stays available in Help');
   assert.equal(t.normalizedSettings().mode,'phantomseal_faceshield');
   assert.equal(t.normalizedSettings().phantom_iterations,1000);
+  assert.equal(t.normalizedSettings().nullswap_strength,1);
+  assert.equal(t.normalizedSettings().nullswap_seed,0);
+  for(const value of [-.25,4.01,NaN,Infinity,'1',true]) assert.throws(()=>t.normalizedSettings({nullswap_strength:value}));
+  for(const value of [-1,4294967296,.5,NaN,Infinity,'0',false]) assert.throws(()=>t.normalizedSettings({nullswap_seed:value}));
+  for(const value of [0,.25,2.75,4]) assert.equal(t.normalizedSettings({nullswap_strength:value}).nullswap_strength,value);
+  for(const value of [0,1,4294967295]) assert.equal(t.normalizedSettings({nullswap_seed:value}).nullswap_seed,value);
+  assert.equal(t.normalizedSettings({mode:'nullswap'},true).nullswap_strength,1,'Saved NullSwap settings from before these controls retain strength 1');
+  assert.equal(t.normalizedSettings({mode:'nullswap'},true).nullswap_seed,0,'Saved NullSwap settings from before these controls retain seed 0');
   assert.equal(t.normalizedSettings({},true).mode,'faceshield','Old settings/presets must keep FaceShield-only behavior');
   assert.equal(t.normalizedSettings({mode:'phantomseal'},true).mode,'phantomseal');
   for(const value of [9,2001,10.5,NaN]) assert.throws(()=>t.normalizedSettings({phantom_iterations:value}));
@@ -78,6 +86,7 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   t.applySettings({});
   assert.equal(elements.get('phantom-iterations').disabled,false);
   assert.equal(elements.get('iterations').disabled,false);
+  for(const id of ['nullswap-strength','nullswap-seed']) assert.equal(elements.get(id).disabled,true,'NullSwap parameters apply only to NullSwap');
   t.applySettings({mode:'phantomseal'});
   assert.equal(elements.get('phantom-iterations').disabled,false);
   for(const id of ['iterations','noise-clamp','step-size']) assert.equal(elements.get(id).disabled,true);
@@ -122,6 +131,8 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   assert.equal(t.settings().phantom_iterations,1200);
   store.set('faceshield.presets.v1',JSON.stringify({version:1,presets:[{id:'legacy',name:'Old FaceShield',params:{iterations:44}}]}));
   t.readPresets(); assert.equal(t.state.presets[0].params.mode,'faceshield','Legacy named presets must migrate to FaceShield');
+  assert.equal(t.state.presets[0].params.nullswap_strength,1);
+  assert.equal(t.state.presets[0].params.nullswap_seed,0);
   t.openSettingsDialog();
   elements.get('dialog-method-select').value='phantomseal_faceshield'; elements.get('dialog-phantom-iterations').value='1100';
   elements.get('preset-name').value='Combined'; t.savePreset(); t.readPresets();
@@ -129,6 +140,60 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   assert.equal(combined.params.mode,'phantomseal_faceshield'); assert.equal(combined.params.phantom_iterations,1100);
   elements.get('preset-select').value=combined.id; t.selectPreset(); t.saveSettingsDialog();
   assert.equal(t.settings().mode,'phantomseal_faceshield'); assert.equal(t.settings().phantom_iterations,1100);
+
+  // NullSwap values round-trip through its dialog and presets without changing other methods.
+  t.applySettings({mode:'nullswap',nullswap_strength:2.75,nullswap_seed:4294967295});
+  assert.equal(elements.get('nullswap-strength-value').textContent,'×2.75');
+  assert.match(elements.get('nullswap-parameters-note').textContent,/22\/255 before PNG rounding/);
+  assert.equal(elements.get('nullswap-parameters-note').hidden,false);
+  assert.doesNotMatch(elements.get('chain-note').textContent,/gain 1|maximum change 8\/255/);
+  for(const id of ['nullswap-strength','nullswap-seed']) assert.equal(elements.get(id).disabled,false);
+  elements.get('nullswap-seed').value='';assert.throws(()=>t.settings(),/nullswap seed/,'A blank seed is invalid, not an implicit zero');
+  elements.get('nullswap-seed').value='4294967295';
+  t.openSettingsDialog();
+  for(const id of ['dialog-nullswap-strength','dialog-nullswap-seed']) assert.equal(elements.get(id).disabled,false);
+  assert.equal(elements.get('dialog-nullswap-strength-value').textContent,'×2.75');
+  assert.equal(Number(elements.get('dialog-nullswap-seed').value),4294967295);
+  elements.get('dialog-nullswap-seed').value='1.5';t.saveSettingsDialog();
+  assert.equal(elements.get('settings-dialog').open,true);
+  assert.match(elements.get('settings-message').textContent,/nullswap seed.*whole number/);
+  assert.equal(t.settings().nullswap_seed,4294967295,'Invalid draft must leave live settings intact');
+  elements.get('dialog-nullswap-strength').value='0.25';elements.get('dialog-nullswap-seed').value='42';
+  context.crypto.randomUUID=()=> 'nullswap-preset';
+  elements.get('preset-name').value='NullSwap variation';t.savePreset();t.readPresets();
+  const nullswapPreset=t.state.presets.find(p=>p.name==='NullSwap variation');
+  assert.equal(nullswapPreset.params.nullswap_strength,.25);assert.equal(nullswapPreset.params.nullswap_seed,42);
+  elements.get('preset-select').value=nullswapPreset.id;t.selectPreset();
+  assert.equal(elements.get('dialog-nullswap-strength-value').textContent,'×0.25');
+  assert.match(elements.get('dialog-nullswap-parameters-note').textContent,/2\/255 before PNG rounding/);
+  t.saveSettingsDialog();assert.equal(t.settings().nullswap_strength,.25);assert.equal(t.settings().nullswap_seed,42);
+  const savedSettings=JSON.parse(store.get('faceshield.settings.v1'));
+  assert.equal(savedSettings.nullswap_strength,.25);assert.equal(savedSettings.nullswap_seed,42);
+  t.busy(true);
+  for(const id of ['nullswap-strength','nullswap-seed','dialog-nullswap-strength','dialog-nullswap-seed']) assert.equal(elements.get(id).disabled,true,'Busy state must lock all NullSwap controls');
+  t.busy(false);
+  assert.equal(elements.get('nullswap-strength').disabled,false);
+  t.openSettingsDialog();
+  elements.get('dialog-nullswap-strength').value='2.75';elements.get('dialog-nullswap-seed').value='invalid';
+  elements.get('dialog-method-select').value='faceshield';t.syncMethodControls('dialog-');
+  assert.equal(Number(elements.get('dialog-nullswap-strength').value),2.75,'Inactive fractional strength remains valid');
+  assert.equal(Number(elements.get('dialog-nullswap-seed').value),42,'Invalid inactive seed is restored from the last valid draft');
+  assert.equal(elements.get('dialog-nullswap-seed').disabled,true);
+  assert.equal(elements.get('dialog-nullswap-parameters-note').hidden,true);
+  t.closeSettingsDialog();
+  assert.equal(t.settings().nullswap_strength,.25,'Cancel discards the changed NullSwap strength');
+  t.applySettings({mode:'nullswap',nullswap_strength:0,nullswap_seed:0});
+  assert.equal(elements.get('nullswap-strength-value').textContent,'×0.00');
+  assert.match(elements.get('nullswap-parameters-note').textContent,/0\/255.*Strength 0 adds no perturbation/);
+  t.applySettings({});
+  assert.equal(t.settings().nullswap_strength,1,'Reset restores the existing strength');
+  assert.equal(t.settings().nullswap_seed,0,'Reset restores the existing seed');
+  assert.equal(elements.get('nullswap-parameters-note').hidden,true);
+  elements.get('method-select').value='nullswap';t.syncMethodControls();
+  elements.get('nullswap-seed').value='';
+  elements.get('method-select').value='faceshield';t.syncMethodControls();
+  assert.equal(t.settings().nullswap_seed,0,'An invalid inactive main-panel seed must not block another method');
+  t.applySettings(combined.params);
 
   t.state.uploadVersion=1;
   const old={id:'old',url:'/api/image/old',name:'old.png',width:2,height:1};
@@ -175,6 +240,8 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   assert.equal(submitted.source_id,'full-original','Rerun must use original upload');
   assert.equal(submitted.params.mode,'phantomseal_faceshield');
   assert.equal(submitted.params.phantom_iterations,1100);
+  assert.equal(submitted.params.nullswap_strength,1);
+  assert.equal(submitted.params.nullswap_seed,0);
   assert.equal(t.state.uploadedSource.id,'full-original');
   assert.equal(t.state.source.id,'baseline','Comparison must use normalized baseline');
   assert.equal(t.state.result.id,'protected');
@@ -223,7 +290,7 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   elements.get('test-baseline-cutoff').value='0.75';t.changeBaselineCutoff();
   const runningTest=t.startProtectionTest();
   await until(()=>Boolean(resolveFinal));
-  assert.deepEqual(testPayload,{result_id:'protected',target_key:'wlh',jpeg95:true});
+  assert.deepEqual(testPayload,{result_id:'protected',target_key:'wlh',backend:'simswap',jpeg95:true});
   assert.equal(t.state.busy,true); assert.equal(t.state.busyKind,'test');
   assert.equal(elements.get('process-label').textContent,'Testing…');
   for(const id of ['process-button','upload-button','file-input','export-button','export-stage1-button','run-test-button','test-target','test-jpeg95'])assert.equal(elements.get(id).disabled,true,`Test must lock ${id}`);
@@ -367,9 +434,46 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
   await t.watchTestJob('new-quality-job',result.id);
   assert.equal(t.state.testVisualConfirmations.size,0,'A new job must require new visual confirmation');
   assert.equal(descendants(elements.get('test-results')).filter(node=>node.className==='test-delta').length,0);
+  // Backend changes clear previous results/visual approvals and check only selected weights.
   t.setVisualBaseline(allHigh.conditions[0],true);
+  t.state.testing={ready:true,backends:{simswap:{ready:true},diffswap:{ready:false,message:'Missing diffusion weights'},uniface:{ready:true}}};
+  elements.get('test-backend').value='diffswap';t.changeTestBackend();
+  assert.equal(t.state.testVisualConfirmations.size,0);
+  assert.equal(t.state.testData,null);
+  assert.equal(elements.get('run-test-button').disabled,true);
+  assert.match(elements.get('test-readiness').textContent,/Missing diffusion weights/);
+  elements.get('test-backend').value='uniface';t.changeTestBackend();
+  assert.equal(elements.get('run-test-button').disabled,false);
+  assert.equal(elements.get('run-test-button').textContent,'Run UniFace test');
+  t.state.testData={...allHigh,backend:'diffswap',backend_label:'DiffSwap'};t.renderTestResults();
+  assert.match(renderedText(elements.get('test-results')),/DiffSwap comparison/,'Saved results keep their actual backend label');
+  t.state.engines={nullswap:{ready:true,message:'Reconstruction ready'},phantomseal:{ready:false},faceshield:{ready:false}};
+  elements.get('method-select').value='nullswap';t.syncMethodControls();
+  for(const id of ['phantom-iterations','iterations','noise-clamp','step-size']) assert.equal(elements.get(id).disabled,true);
+  assert.equal(elements.get('max-size').disabled,false);
+  assert.match(elements.get('chain-note').textContent,/reconstruction/);
+  // A real process request carries the selected NullSwap values, including the uint32 boundary.
+  t.applySettings({mode:'nullswap',nullswap_strength:2.25,nullswap_seed:4294967295});
+  t.state.uploadedSource=input;t.state.ready=true;
+  let nullswapPayload;
+  context.fetch=async(url,options)=>{
+    if(url==='/api/process'){
+      nullswapPayload=JSON.parse(options.body);
+      assert.equal(elements.get('nullswap-strength').disabled,true);
+      assert.equal(elements.get('nullswap-seed').disabled,true);
+      return {ok:true,json:async()=>({id:'nullswap-job'})};
+    }
+    assert.equal(url,'/api/job/nullswap-job');
+    return {ok:true,json:async()=>({id:'nullswap-job',source_id:input.id,status:'done',progress:100,source:baseline,result,params:nullswapPayload.params})};
+  };
+  await t.processImage();
+  assert.equal(nullswapPayload.params.mode,'nullswap');
+  assert.equal(nullswapPayload.params.nullswap_strength,2.25);
+  assert.equal(nullswapPayload.params.nullswap_seed,4294967295);
+  assert.equal(elements.get('nullswap-strength').disabled,false);
+  assert.equal(elements.get('nullswap-seed').disabled,false);
   await t.useSource(current);
   assert.equal(t.state.testVisualConfirmations.size,0,'A new photo must clear visual confirmation');
   assert.equal(t.state.testData,null);
-  console.log('PASS: existing editor/test regressions; unchanged POST payload with client-only cutoff; poor/high-unconfirmed/confirmed baseline gates; independent PNG/JPEG checks; raw scores and original thumbnail; null/NaN/detection rejection; invalid cutoff; cached-result recheck; cutoff/new-job/new-photo confirmation resets.');
+  console.log('PASS: existing editor/test regressions; backend dispatch/readiness/labels/confirmation reset; NullSwap controls; client-only cutoff; poor/high-unconfirmed/confirmed baseline gates; independent PNG/JPEG checks; raw scores and original thumbnail; null/NaN/detection rejection; invalid cutoff; cached-result recheck; cutoff/new-job/new-photo confirmation resets.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

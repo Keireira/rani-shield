@@ -87,19 +87,20 @@ def source_file(root, legacy, unified):
 
 
 def bundled_mtcnn(root, name, *, installed_fallback=True, prefer_central=True):
+    root = Path(root).resolve()
     candidates = [root / f".venv/Lib/site-packages/facenet_pytorch/data/{name}.pt"]
     if prefer_central:
         candidates.insert(0, root / f"weights/mtcnn/{name}.pt")
     for path in candidates:
         if path.is_file():
-            return path
+            return checked_destination(root, path.relative_to(root))
     if installed_fallback:
         spec = importlib.util.find_spec("facenet_pytorch")
         if spec and spec.submodule_search_locations:
             for folder in spec.submodule_search_locations:
                 path = Path(folder) / "data" / f"{name}.pt"
-                if path.is_file():
-                    return path
+                if path.is_file() and path.resolve().is_relative_to(root):
+                    return checked_destination(root, path.relative_to(root))
     raise ValueError(f"Missing bundled MTCNN {name}.pt. Run with the prepared project Python.")
 
 

@@ -1,4 +1,4 @@
-"""FaceShield local canvas editor server. Run: python gui.py --port 7876."""
+"""Rani Shield local canvas editor server. Run: python gui.py --port 7876."""
 from __future__ import annotations
 
 import argparse
@@ -24,6 +24,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
+from runtime_contracts import DEFAULTS, MODES, protection_parameters
 
 
 ROOT = Path(__file__).resolve().parent
@@ -31,9 +32,6 @@ MAX_BODY = 48 * 1024 * 1024
 MAX_IMAGE = 32 * 1024 * 1024
 MAX_PIXELS = 36_000_000
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
-MODES = ("phantomseal_faceshield", "phantomseal", "faceshield")
-DEFAULTS = {"mode": "phantomseal_faceshield", "max_size": 1280, "iterations": 30,
-            "noise_clamp": 12, "step_size": 1, "phantom_iterations": 1000}
 LOGGER = logging.getLogger("faceshield.editor")
 
 
@@ -43,28 +41,11 @@ class APIError(Exception):
         self.status = status
 
 
-def number(value, name, low, high, integer=False):
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
-        raise APIError(f"{name}: a finite number is required.")
-    if not low <= value <= high or integer and int(value) != value:
-        raise APIError(f"{name}: expected {'an integer' if integer else 'a number'} between {low} and {high}.")
-    return int(value) if integer else float(value)
-
-
 def parameters(raw):
-    if not isinstance(raw, dict):
-        raise APIError("params must be an object.")
-    mode = raw.get("mode", DEFAULTS["mode"])
-    if not isinstance(mode, str) or mode not in MODES:
-        raise APIError("mode must be phantomseal_faceshield, phantomseal or faceshield.")
-    return {
-        "mode": mode,
-        "max_size": number(raw.get("max_size", 1280), "max_size", 128, 1280, True),
-        "iterations": number(raw.get("iterations", 30), "iterations", 1, 200, True),
-        "noise_clamp": number(raw.get("noise_clamp", 12), "noise_clamp", 1, 32, True),
-        "step_size": number(raw.get("step_size", 1), "step_size", 0.25, 4),
-        "phantom_iterations": number(raw.get("phantom_iterations", 1000), "phantom_iterations", 10, 2000, True),
-    }
+    try:
+        return protection_parameters(raw)
+    except ValueError as error:
+        raise APIError(str(error)) from error
 
 
 def compare_arrays(a, b):
@@ -142,7 +123,7 @@ class Studio:
             engines = self._readiness_provider(self.root)
         elif self._protector_factory is not None:
             engines = {name: {"ready": True, "message": "Injected test runtime is available."}
-                       for name in ("phantomseal", "faceshield")}
+                       for name in ("phantomseal", "faceshield", "nullswap")}
         else:
             # This helper only checks local files; it must not create GPU models.
             from protection_pipeline import readiness
@@ -163,7 +144,10 @@ class Studio:
     def testing_readiness(self):
         from protection_test import target_options, testing_readiness
         if self._test_runner is not None:
-            return {"ready": True, "message": "Injected test runtime is available.", "targets": target_options()}
+            from swap_adapters import BACKENDS
+            return {"ready": True, "message": "Injected test runtime is available.", "targets": target_options(),
+                    "backends": {key: {**value, "ready": True, "message": "Injected test runtime is available."}
+                                 for key, value in BACKENDS.items()}}
         return testing_readiness(self.root)
 
     def _testable_result_ids(self):
@@ -230,8 +214,13 @@ class Studio:
 
     def test(self, payload):
         from protection_test import TARGETS
-        if not isinstance(payload, dict) or set(payload) - {"result_id", "target_key", "jpeg95"}:
-            raise APIError("Use result_id, target_key and jpeg95 only; local paths are not accepted.")
+        from swap_adapters import backend_key, BACKENDS
+        if not isinstance(payload, dict) or set(payload) - {"result_id", "target_key", "jpeg95", "backend"}:
+            raise APIError("Use result_id, target_key, jpeg95 and backend only; local paths are not accepted.")
+        try:
+            backend = backend_key(payload.get("backend", "simswap"))
+        except ValueError as error:
+            raise APIError(str(error)) from error
         result_id, target_key = payload.get("result_id"), payload.get("target_key")
         jpeg95 = payload.get("jpeg95", True)
         if not isinstance(result_id, str) or not result_id:
@@ -248,9 +237,9 @@ class Studio:
                 and job.get("result", {}).get("id") == result_id), None)
             if protect is None:
                 raise APIError("Only a completed protection result from this editor can be tested.", 404)
-            readiness = self.testing_readiness()
+            readiness = self.testing_readiness()["backends"][backend]
             if not readiness["ready"]:
-                raise APIError("SimSwap test is unavailable. " + readiness["message"], 503)
+                raise APIError(BACKENDS[backend]["label"] + " test is unavailable. " + readiness["message"], 503)
             mode = protect["params"]["mode"]
             source = self.asset(protect["source"]["id"])
             result = self.asset(protect["result"]["id"])
@@ -261,15 +250,18 @@ class Studio:
             self.jobs[job_id] = {"id": job_id, "kind": "test", "status": "queued", "stage": "Queued",
                 "progress": 0, "elapsed": 0.0, "error": None, "test": None, "result_id": result_id,
                 "protection_job_id": protect["id"], "target_key": target_key, "jpeg95": jpeg95,
+                "backend": backend,
                 "_started": time.monotonic()}
             self.active = job_id
             self.latest_test_job_ids[result_id] = job_id
-        threading.Thread(target=self._run_test, args=(job_id, source, result, stage1, mode, target_key, jpeg95),
+        threading.Thread(target=self._run_test, args=(job_id, source, result, stage1, mode, target_key, jpeg95, backend),
                          daemon=True, name=f"faceshield-test-{job_id[:8]}").start()
         return {"id": job_id, "status": "queued", "kind": "test"}
 
-    def _run_test(self, job_id, source, result, stage1, mode, target_key, jpeg95):
-        from protection_test import METRIC, NOTE, TARGETS, finite_score, run_protection_test
+    def _run_test(self, job_id, source, result, stage1, mode, target_key, jpeg95, backend):
+        from protection_test import METRIC, TARGETS, finite_score, run_protection_test, test_note
+        from swap_adapters import BACKENDS
+        label = BACKENDS[backend]["label"]
         def update(**values):
             with self.lock:
                 self.jobs[job_id].update(values)
@@ -279,21 +271,23 @@ class Studio:
                 raise ValueError("Test output must stay inside its editor-owned test folder.")
             return self.register(path, kind, name)
         try:
-            update(status="running", stage="Preparing SimSwap test")
+            update(status="running", stage=f"Preparing {label} test")
             def progress(fraction, description):
                 update(progress=max(0, min(98, float(fraction) * 98)), stage=str(description))
             report = (self._test_runner or run_protection_test)(root_dir=self.root, output_dir=folder,
                 source_path=self.asset_path(source["id"]), result_path=self.asset_path(result["id"]),
                 stage1_path=self.asset_path(stage1["id"]) if stage1 else None, mode=mode,
-                target_key=target_key, jpeg95=jpeg95, progress=progress)
+                target_key=target_key, jpeg95=jpeg95, progress=progress, backend=backend)
+            if report.get("backend", backend) != backend:
+                raise ValueError("Test runner returned results from a different face-swap model.")
             target = register_test(report["target_path"], "test_target", TARGETS[target_key]["label"] + ".png")
             conditions = []
             expected_keys = ["clean", "stage1", "final"] if mode == "phantomseal_faceshield" else ["clean", "final"]
             if [condition["name"] for condition in report["conditions"]] != (["png", "jpeg95"] if jpeg95 else ["png"]):
-                raise ValueError("Unexpected SimSwap test conditions.")
+                raise ValueError("Unexpected face-swap test conditions.")
             for condition in report["conditions"]:
                 if [row["key"] for row in condition["rows"]] != expected_keys:
-                    raise ValueError("Unexpected SimSwap test variants.")
+                    raise ValueError("Unexpected face-swap test variants.")
                 rows = []
                 for row in condition["rows"]:
                     swap = register_test(row["swap_path"], "test_swap", condition["name"] + "_" + row["key"] + "_swap.png") if row.get("swap_path") else None
@@ -307,7 +301,8 @@ class Studio:
                 conditions.append({"name": condition["name"], "rows": rows, "delta_final_minus_stage1": delta})
             elapsed = round(time.monotonic() - self.jobs[job_id]["_started"], 1)
             update(status="done", stage="Test complete", progress=100, elapsed=elapsed,
-                   test={"target": target, "conditions": conditions, "metric": METRIC, "note": NOTE})
+                   test={"target": target, "conditions": conditions, "metric": METRIC,
+                         "backend": backend, "backend_label": label, "note": test_note(backend)})
         except Exception as exc:
             LOGGER.exception("FaceShield test job %s failed", job_id)
             message = str(exc) or type(exc).__name__
@@ -451,7 +446,7 @@ def create_app(root_dir=ROOT, studio=None, port=7876):
     @app.exception_handler(Exception)
     async def unexpected_error(request, exc):
         LOGGER.exception("Editor API failed")
-        return JSONResponse({"error": "The request failed. See the FaceShield terminal for details."}, status_code=500)
+        return JSONResponse({"error": "The request failed. See the Rani Shield terminal for details."}, status_code=500)
 
     @app.get("/health")
     def health():
@@ -522,11 +517,13 @@ app = create_app()
 
 
 def main():
+    from scripts.runtime_environment import configure_environment
+    configure_environment(ROOT)
     import uvicorn
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="FaceShield local canvas editor")
+    parser = argparse.ArgumentParser(description="Rani Shield local canvas editor")
     parser.add_argument("--host", default="127.0.0.1", choices=("127.0.0.1", "localhost", "::1"))
     parser.add_argument("--port", type=int, default=int(os.environ.get("FACESHIELD_PORT", "7876")))
     parser.add_argument("--no-browser", action="store_true")
@@ -535,7 +532,7 @@ def main():
         parser.error("--port must be between 1 and 65535.")
     application = create_app(port=args.port)
     url = f"http://{'[::1]' if args.host == '::1' else args.host}:{args.port}"
-    print(f"FaceShield Studio: {url}\nStop: Ctrl+C", flush=True)
+    print(f"Rani Shield: {url}\nStop: Ctrl+C", flush=True)
     if not args.no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     uvicorn.run(application, host=args.host, port=args.port, access_log=False)

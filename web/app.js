@@ -2,9 +2,10 @@
 
 const $ = (id) => document.getElementById(id);
 const viewModes = ["original", "split", "side", "result", "diff"];
-const defaults = { mode: "phantomseal_faceshield", phantom_iterations: 1000, max_size: 1280, iterations: 30, noise_clamp: 12, step_size: 1 };
-const methodLabels = { phantomseal_faceshield: "PhantomSeal → FaceShield", phantomseal: "PhantomSeal", faceshield: "FaceShield" };
-const fields = { phantom_iterations: "phantom-iterations", max_size: "max-size", iterations: "iterations", noise_clamp: "noise-clamp", step_size: "step-size" };
+const defaults = { mode: "phantomseal_faceshield", phantom_iterations: 1000, max_size: 1280, iterations: 30, noise_clamp: 12, step_size: 1, nullswap_strength: 1, nullswap_seed: 0 };
+const methodLabels = { phantomseal_faceshield: "PhantomSeal → FaceShield", phantomseal: "PhantomSeal", faceshield: "FaceShield", nullswap: "NullSwap (reconstruction)" };
+const backendLabels = { simswap: "SimSwap", diffswap: "DiffSwap", infoswap: "InfoSwap", uniface: "UniFace" };
+const fields = { phantom_iterations: "phantom-iterations", max_size: "max-size", iterations: "iterations", noise_clamp: "noise-clamp", step_size: "step-size", nullswap_strength: "nullswap-strength", nullswap_seed: "nullswap-seed" };
 const state = {
   uploadedSource: null, source: null, result: null, stage1: null, sourceImage: null, resultImage: null,
   mode: "original", split: 0.5, zoom: 1, panX: 0, panY: 0, rect: null,
@@ -35,7 +36,7 @@ async function api(path, data) {
   });
   let value;
   try { value = await response.json(); }
-  catch { throw new Error("Invalid server response. Check the FaceShield terminal."); }
+  catch { throw new Error("Invalid server response. Check the Rani Shield terminal."); }
   if (!response.ok) {
     const error = new Error(value.error || value.detail || `Server error ${response.status}`);
     error.status = response.status;
@@ -76,13 +77,13 @@ function persistSelection() {
 }
 
 function methodNeeds(mode) {
-  return { phantomseal: mode !== "faceshield", faceshield: mode !== "phantomseal" };
+  return { phantomseal: ["phantomseal", "phantomseal_faceshield"].includes(mode), faceshield: ["faceshield", "phantomseal_faceshield"].includes(mode), nullswap: mode === "nullswap" };
 }
 function methodProblem(mode) {
   const needs = methodNeeds(mode);
-  for (const engine of ["phantomseal", "faceshield"]) {
+  for (const engine of ["phantomseal", "faceshield", "nullswap"]) {
     if (needs[engine] && state.engines[engine]?.ready === false) {
-      return state.engines[engine].message || `${engine === "phantomseal" ? "PhantomSeal" : "FaceShield"} is not ready.`;
+      return state.engines[engine].message || `${methodLabels[engine]} is not ready.`;
     }
   }
   return "";
@@ -92,26 +93,37 @@ function syncMethodControls(prefix = "") {
   const needs = methodNeeds(mode), locked = state.busy || state.initializing;
   $(`${prefix}method-select`).disabled = locked;
   for (const [key, id] of Object.entries(fields)) {
-    const engine = key === "phantom_iterations" ? "phantomseal" : ["iterations", "noise_clamp", "step_size"].includes(key) ? "faceshield" : null;
+    const engine = key === "phantom_iterations" ? "phantomseal" : key.startsWith("nullswap_") ? "nullswap" : ["iterations", "noise_clamp", "step_size"].includes(key) ? "faceshield" : null;
     const active = engine === null || needs[engine];
     const input = $(`${prefix}${id}`);
-    if (prefix && !active) {
+    if (!active && (prefix || key.startsWith("nullswap_"))) {
       const value = Number(input.value);
-      if (!Number.isFinite(value) || value < Number(input.min) || value > Number(input.max) || (key !== "step_size" && !Number.isInteger(value))) {
-        input.value = state.settingsDraft?.[key] ?? defaults[key];
+      if (String(input.value).trim() === "" || !Number.isFinite(value) || value < Number(input.min) || value > Number(input.max) || (!["step_size", "nullswap_strength"].includes(key) && !Number.isInteger(value))) {
+        input.value = (prefix ? state.settingsDraft?.[key] : undefined) ?? defaults[key];
       }
     }
     input.disabled = locked || !active;
     $(`${prefix}${id}`).closest("[data-engine]")?.classList.toggle("control-inactive", !active);
   }
+  const strength = Number($(`${prefix}nullswap-strength`).value);
+  const validStrength = String($(`${prefix}nullswap-strength`).value).trim() !== "" && Number.isFinite(strength) && strength >= 0 && strength <= 4;
+  setText(`${prefix}nullswap-strength-value`, validStrength ? `×${strength.toFixed(2)}` : "Invalid");
+  const note = $(`${prefix}nullswap-parameters-note`);
+  note.hidden = !needs.nullswap;
+  note.textContent = validStrength
+    ? `Maximum change: ${Number((8 * strength).toFixed(2))}/255 before PNG rounding. Strength 0 adds no perturbation. The same seed repeats the initial noise; higher strength does not guarantee better protection.`
+    : "Choose a NullSwap strength between 0 and 4.";
   const problem = methodProblem(mode);
   const status = $(`${prefix}method-readiness`);
   status.classList.toggle("unavailable", Boolean(problem));
   status.textContent = state.initializing ? "Checking methods…" : problem || Object.entries(needs)
     .filter(([, used]) => used)
-    .map(([engine]) => state.engines[engine]?.message || `${engine === "phantomseal" ? "PhantomSeal" : "FaceShield"}: ${state.engines[engine]?.ready === true ? "ready" : "status unavailable"}`)
+    .map(([engine]) => state.engines[engine]?.message || `${methodLabels[engine]}: ${state.engines[engine]?.ready === true ? "ready" : "status unavailable"}`)
     .join(" · ");
-  if (!prefix) $("chain-note").hidden = mode !== "phantomseal_faceshield";
+  if (!prefix) {
+    $("chain-note").hidden = !["phantomseal_faceshield", "nullswap"].includes(mode);
+    $("chain-note").textContent = mode === "nullswap" ? "PhantomSeal's reconstruction of NullSwap, not the original authors' implementation. Native 256px face perturbation mapped to your photo using the selected strength and seed." : "Experimental combination. Changes from both methods accumulate; the FaceShield noise limit applies only to its own stage.";
+  }
 }
 function updateCards() {
   syncMethodControls();
@@ -148,19 +160,31 @@ function invalidateTest() {
   $("test-error").hidden = true; $("test-feedback").hidden = true;
   if ($("test-dialog").open) $("test-dialog").close();
 }
+function selectedBackend() { return $("test-backend").value || "simswap"; }
+function selectedTestReadiness() { return state.testing?.backends?.[selectedBackend()] || (selectedBackend() === "simswap" ? state.testing : {ready: false, message: "This model is unavailable."}); }
+function changeTestBackend() {
+  if (state.busy) return;
+  const resultId = state.result?.id;
+  state.testVersion++; state.testVisualConfirmations.clear();
+  state.testResultId = resultId; state.testJobId = state.testData = null;
+  state.testError = state.testStage = "";
+  state.latestTestJobIds.delete(resultId);
+  renderTestResults(); updateTestControls();
+}
 function updateTestControls() {
   const ownTest = state.busy && state.busyKind === "test" && state.testResultId === state.result?.id;
   const blocked = state.busy || state.uploading || state.initializing;
   // Reopening an active test is a read-only action; its Run control stays locked.
   $("test-protection-button").disabled = !testEligible() || state.uploading || state.initializing || (state.busy && !ownTest);
   $("test-protection-button").textContent = ownTest ? "View test progress" : "Test protection";
-  $("test-protection-button").title = testEligible() ? "Compare real SimSwap outputs for this result" : "Protect a photo in this session to enable its test";
-  $("test-target").disabled = blocked || state.testing?.ready !== true;
-  $("test-jpeg95").disabled = blocked || state.testing?.ready !== true;
+  $("test-protection-button").title = testEligible() ? "Compare real face-swap outputs for this result" : "Protect a photo in this session to enable its test";
+  $("test-backend").disabled = blocked;
+  $("test-target").disabled = blocked || selectedTestReadiness()?.ready !== true;
+  $("test-jpeg95").disabled = blocked || selectedTestReadiness()?.ready !== true;
   $("test-baseline-cutoff").disabled = blocked;
-  $("run-test-button").disabled = blocked || !testEligible() || state.testing?.ready !== true || !["cage", "wlh", "zxy"].includes($("test-target").value);
-  $("run-test-button").textContent = ownTest ? "Testing…" : "Run SimSwap test";
-  $("test-readiness").textContent = !state.result ? "Protect a photo first." : !testEligible() ? "This result is not available for testing. Protect the photo again." : state.testing?.ready === true ? "This test runs locally. Its swap images do not replace your protected photo." : state.testing?.message || "The SimSwap test is unavailable.";
+  $("run-test-button").disabled = blocked || !testEligible() || selectedTestReadiness()?.ready !== true || !["cage", "wlh", "zxy"].includes($("test-target").value);
+  $("run-test-button").textContent = ownTest ? "Testing…" : `Run ${backendLabels[selectedBackend()]} test`;
+  $("test-readiness").textContent = !state.result ? "Protect a photo first." : !testEligible() ? "This result is not available for testing. Protect the photo again." : selectedTestReadiness()?.ready === true ? `This ${backendLabels[selectedBackend()]} test runs locally. ${selectedBackend() === "diffswap" ? "DiffSwap uses 200 diffusion steps and takes longer. " : ""}Its swap images do not replace your protected photo.` : selectedTestReadiness()?.message || "The selected test is unavailable.";
   $("test-error").textContent = state.testError;
   $("test-error").hidden = !state.testError;
   $("test-feedback").hidden = !ownTest;
@@ -262,6 +286,7 @@ function renderTestResults() {
     figure.appendChild(image); figure.appendChild(testNode("figcaption", "", caption));
     references.appendChild(figure);
   }
+  context.appendChild(testNode("strong", "", `${data.backend_label || backendLabels[data.backend || "simswap"]} comparison`));
   context.appendChild(references);
   context.appendChild(testNode("p", "", "Compare the unprotected swap with your clean original first. Protection-effect comparisons stay hidden until the numeric quality gate and your visual confirmation both accept the baseline."));
   container.appendChild(context);
@@ -277,7 +302,7 @@ function renderTestResults() {
       card.appendChild(testNode("h4", "", rowLabel));
       const swapUrl = testAssetUrl(row.swap);
       if (swapUrl) {
-        const image = testNode("img", "test-swap-image"); image.src = swapUrl; image.alt = `${rowLabel} SimSwap output`;
+        const image = testNode("img", "test-swap-image"); image.src = swapUrl; image.alt = `${rowLabel} ${data.backend_label || backendLabels[data.backend || "simswap"]} output`;
         card.appendChild(image);
       } else card.appendChild(testNode("div", "test-swap-placeholder", "Swap image unavailable"));
       const finite = typeof row.score === "number" && Number.isFinite(row.score) && row.source_detected === true && row.swap_detected === true;
@@ -307,16 +332,16 @@ async function openTestDialog() {
 }
 function closeTestDialog() { $("test-dialog").close(); }
 async function startProtectionTest() {
-  if (state.busy || state.uploading || state.initializing || !testEligible() || state.testing?.ready !== true) return;
+  if (state.busy || state.uploading || state.initializing || !testEligible() || selectedTestReadiness()?.ready !== true) return;
   const resultId = state.result.id, targetKey = $("test-target").value;
   if (!["cage", "wlh", "zxy"].includes(targetKey)) { state.testError = "Choose a supported demo face."; updateTestControls(); return; }
   const version = ++state.testVersion, owner = `starting-${version}`;
   state.testVisualConfirmations.clear();
   state.testResultId = resultId; state.testJobId = state.testData = null; state.testError = "";
-  state.testProgress = state.testElapsed = 0; state.testStage = "Preparing SimSwap test…";
+  state.testProgress = state.testElapsed = 0; state.testStage = `Preparing ${backendLabels[selectedBackend()]} test…`;
   state.activeTestId = owner; renderTestResults(); busy(true, "test");
   try {
-    const job = await api("/api/test", { result_id: resultId, target_key: targetKey, jpeg95: $("test-jpeg95").checked });
+    const job = await api("/api/test", { result_id: resultId, target_key: targetKey, backend: selectedBackend(), jpeg95: $("test-jpeg95").checked });
     if (!job.id || (job.kind && job.kind !== "test")) throw new Error("The server did not create a test job.");
     state.latestTestJobIds.set(resultId, job.id);
     await watchTestJob(job.id, resultId, null, version);
@@ -344,23 +369,24 @@ async function watchTestJob(id, expectedResult = state.result?.id, firstJob = nu
         setText("live-status", "Test connection interrupted. Reconnecting…");
         await new Promise((resolve) => setTimeout(resolve, 1000)); continue;
       }
-      if (job.kind !== "test") throw new Error("The returned job is not a SimSwap test.");
+      if (job.kind !== "test") throw new Error("The returned job is not a protection test.");
       if (job.result_id && expectedResult && job.result_id !== expectedResult) throw new Error("The test belongs to a different protected result.");
       const progress = Math.max(0, Math.min(100, Number(job.progress) || 0));
       const elapsed = Math.max(0, Number(job.elapsed) || 0);
       $("progress-bar").value = progress; setText("progress-label", `${Math.round(progress)}%`);
       setText("live-status", job.stage || "Testing protection…");
       if (currentTest(expectedResult, version)) {
+        $("test-backend").value = job.backend || "simswap";
         state.testProgress = progress; state.testElapsed = elapsed; state.testStage = job.stage || "Testing protection…";
         updateTestControls();
       }
-      if (job.status === "error") throw new Error(job.error || "The SimSwap test failed.");
+      if (job.status === "error") throw new Error(job.error || "The face-swap test failed.");
       if (job.status === "done") {
         if (!job.test || !Array.isArray(job.test.conditions)) throw new Error("The completed test has no results.");
         state.latestTestJobIds.set(expectedResult, id);
         if (currentTest(expectedResult, version)) {
           state.testData = job.test; state.testProgress = 100; state.testStage = "Test complete";
-          renderTestResults(); updateTestControls(); toast("SimSwap test complete");
+          renderTestResults(); updateTestControls(); toast("Face-swap test complete");
         }
         return job.test;
       }
@@ -435,7 +461,7 @@ async function useResult(asset, metrics) {
 async function upload(file) {
   if (!file) return;
   if (state.busy) { toast("Wait for the current job to finish."); return; }
-  if (state.initializing) { toast("Connecting to FaceShield…"); return; }
+  if (state.initializing) { toast("Connecting to Rani Shield…"); return; }
   if (file.size > 32 * 1024 * 1024) { toast("Maximum file size: 32 MB.", true); return; }
   const version = ++state.uploadVersion;
   state.uploading = true;
@@ -623,7 +649,7 @@ function normalizedSettings(value = {}, legacy = false) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid settings.");
   const mode = value.mode ?? (legacy ? "faceshield" : defaults.mode);
   if (!Object.hasOwn(methodLabels, mode)) throw new Error("Choose a supported protection method.");
-  const rules = { phantom_iterations: [10, 2000, true], max_size: [128, 1280, true], iterations: [10, 100, true], noise_clamp: [1, 32, true], step_size: [0.25, 4, false] };
+  const rules = { phantom_iterations: [10, 2000, true], max_size: [128, 1280, true], iterations: [10, 100, true], noise_clamp: [1, 32, true], step_size: [0.25, 4, false], nullswap_strength: [0, 4, false], nullswap_seed: [0, 4294967295, true] };
   const result = { mode };
   for (const [name, [low, high, integer]] of Object.entries(rules)) {
     const number = value[name] ?? defaults[name];
@@ -635,7 +661,8 @@ function normalizedSettings(value = {}, legacy = false) {
   return result;
 }
 
-function settings() { return normalizedSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, Number($(id).value)])), mode: $("method-select").value }); }
+function numericFieldValue(id) { return String($(id).value).trim() === "" ? NaN : Number($(id).value); }
+function settings() { return normalizedSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, numericFieldValue(id)])), mode: $("method-select").value }); }
 function applySettings(value, legacy = false) {
   const params = normalizedSettings(value, legacy);
   $("method-select").value = params.mode;
@@ -660,7 +687,7 @@ function refreshControlValues() {
   });
 }
 
-function readDialogSettings() { return normalizedSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, Number($(`dialog-${id}`).value)])), mode: $("dialog-method-select").value }); }
+function readDialogSettings() { return normalizedSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, numericFieldValue(`dialog-${id}`)])), mode: $("dialog-method-select").value }); }
 function dialogMessage(message = "") { $("settings-message").textContent = message; $("settings-message").hidden = !message; }
 function renderSettingsDialog() {
   if (!state.settingsDraft) return;
@@ -842,6 +869,7 @@ function bindEvents() {
   $("export-stage1-button").addEventListener("click", downloadStage1);
   $("test-protection-button").addEventListener("click", openTestDialog);
   $("run-test-button").addEventListener("click", startProtectionTest);
+  $("test-backend").addEventListener("change", changeTestBackend);
   $("test-baseline-cutoff").addEventListener("input", changeBaselineCutoff);
   for (const id of ["close-test", "dismiss-test"]) $(id).addEventListener("click", closeTestDialog);
   $("test-dialog").addEventListener("cancel", (event) => { event.preventDefault(); closeTestDialog(); });
@@ -860,7 +888,7 @@ function bindEvents() {
   for (const id of ["close-settings", "cancel-settings"]) $(id).addEventListener("click", closeSettingsDialog);
   $("save-settings").addEventListener("click", saveSettingsDialog);
   $("preset-select").addEventListener("change", selectPreset); $("save-preset").addEventListener("click", savePreset); $("delete-preset").addEventListener("click", deletePreset);
-  for (const id of Object.values(fields)) $(`dialog-${id}`).addEventListener("input", () => { try { state.settingsDraft = readDialogSettings(); dialogMessage(); } catch (error) { dialogMessage(error.message); } });
+  for (const id of Object.values(fields)) $(`dialog-${id}`).addEventListener("input", () => { syncMethodControls("dialog-"); try { state.settingsDraft = readDialogSettings(); dialogMessage(); } catch (error) { dialogMessage(error.message); } });
   $("dialog-method-select").addEventListener("change", () => { syncMethodControls("dialog-"); try { state.settingsDraft = readDialogSettings(); dialogMessage(); } catch (error) { dialogMessage(error.message); } });
   $("settings-dialog").addEventListener("cancel", (event) => { event.preventDefault(); closeSettingsDialog(); });
   $("settings-dialog").addEventListener("close", () => { state.settingsDraft = null; updatePresetButtons(); });
@@ -913,7 +941,7 @@ async function initialize() {
   try {
     const session = await api("/api/state"); state.ready = session.runtime?.ready !== false;
     state.engines = session.engines || {};
-    state.testing = session.testing || { ready: false, message: "This server does not provide SimSwap tests." };
+    state.testing = session.testing || { ready: false, message: "This server does not provide face-swap tests." };
     state.testableResultIds = new Set(session.testable_result_ids || []);
     state.latestTestJobIds = new Map(Object.entries(session.latest_test_job_ids || {}));
     const targetKeys = ["cage", "wlh", "zxy"];

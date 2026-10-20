@@ -1,4 +1,4 @@
-"""Start the local FaceShield canvas editor (compatibility entry point)."""
+"""Start the local Rani Shield editor."""
 from gui import main
 
 if __name__ == "__main__":

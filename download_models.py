@@ -2,10 +2,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import argparse
-import json
 import shutil
 import urllib.request
 import zipfile
+from asset_paths import weight_path
 
 ROOT = Path(__file__).resolve().parent
 
@@ -39,17 +39,17 @@ def main():
         'unet/diffusion_pytorch_model.fp16.safetensors',
     ]
     jobs = [(f'https://huggingface.co/{sd_repo}/resolve/main/{name}',
-             ROOT / 'weights/sd15' / name) for name in sd_files]
+             weight_path(ROOT, 'sd15', name)) for name in sd_files]
     for name in ('config.json', 'model.safetensors'):
         jobs.append((f'https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/{name}',
-                     ROOT / 'weights/ip-adapter/models/image_encoder' / name))
+                     weight_path(ROOT, 'ip-adapter/models/image_encoder', name)))
     jobs.append(('https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15.bin',
-                 ROOT / 'weights/ip-adapter/ip-adapter_sd15.bin'))
+                 weight_path(ROOT, 'ip-adapter/ip-adapter_sd15.bin')))
     jobs.append(('https://github.com/khrlimam/mtcnn-pytorch/releases/download/0.0.1/pnet-6b6ef92b.pth',
-                 ROOT / 'weights/mtcnn-attack/pnet-6b6ef92b.pth'))
-    archive = ROOT / 'weights/downloads/arcface-models.zip'
+                 weight_path(ROOT, 'mtcnn-attack/pnet-6b6ef92b.pth')))
+    archive = weight_path(ROOT, 'downloads/arcface-models.zip')
     arc_files = ['arcface50_checkpoint.tar', 'arcface100_checkpoint.tar']
-    if not all((ROOT / 'weights/faceshield' / name).is_file() for name in arc_files):
+    if not all(weight_path(ROOT, 'faceshield', name).is_file() for name in arc_files):
         jobs.append(('https://kuaicv.synology.me/weights/iccv2025/FaceShield/models.zip', archive))
     errors = []
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -62,7 +62,7 @@ def main():
     if archive.is_file():
         with zipfile.ZipFile(archive) as bundle:
             for name in arc_files:
-                target = ROOT / 'weights/faceshield' / name
+                target = weight_path(ROOT, 'faceshield', name)
                 if target.is_file():
                     continue
                 members = [m for m in bundle.infolist() if Path(m.filename).name == name]

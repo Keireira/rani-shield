@@ -11,7 +11,7 @@ import download_models
 class BaseDownloadLayoutTests(unittest.TestCase):
     def test_real_installer_routes_downloads_and_selected_archive_members_to_weights(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             def fake_download(url, destination):
                 destination = Path(destination)
                 self.assertTrue(destination.is_relative_to(root / 'weights'))

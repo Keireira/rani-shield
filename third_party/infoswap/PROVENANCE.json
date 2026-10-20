@@ -1,0 +1,48 @@
+{
+  "repository": "https://github.com/GGGHSL/InfoSwap-master",
+  "commit": "0484ef5fcb35bf811f2c3ec52ecf77ccade822db",
+  "files": [
+    {
+      "file": "encoder128.py",
+      "upstream_path": "modules/encoder128.py",
+      "upstream_sha256": "f81af75efd4168e82a773d5351112bee3fa478db4d715d5741975ff98aef7fb8",
+      "local_sha256": "4f1162097b1b4da493fcb3545948f36f462a00cd4650c1ed8c523d5e5e0e06fd"
+    },
+    {
+      "file": "aii_generator.py",
+      "upstream_path": "modules/aii_generator.py",
+      "upstream_sha256": "a27992aed57874666054f259669e149ba41b41a365eb2bdda260510997a15715",
+      "local_sha256": "6e2e12a3aaa2dc72187e4d602bad1730046a7030eca9e9f50e636d919cbeb41e"
+    },
+    {
+      "file": "decoder512.py",
+      "upstream_path": "modules/decoder512.py",
+      "upstream_sha256": "dddd887ffdcb84b3323817f1347e1c0c811d6c4d4d734c8bb0b47006441df6c1",
+      "local_sha256": "c2b18135d50f346fdd3fce078db9609ac49b8713460fbfaa4c2a40ca0dd393e4"
+    },
+    {
+      "file": "iib.py",
+      "upstream_path": "modules/iib.py",
+      "upstream_sha256": "8617b9420459e774dbefb8221e02cb26957f68c328215b7513db252a50d9afdf",
+      "local_sha256": "3a03284f3cfed9bbfc398bd512ce363e2b8b000f1b85160535ea416996495263"
+    },
+    {
+      "file": "align_trans.py",
+      "upstream_path": "preprocess/mtcnn_pytorch/src/align_trans.py",
+      "upstream_sha256": "52603a2001eae8ef0bed5de6e939f6f18e5c9bda989f55baa5f6826b0849aa8a",
+      "local_sha256": "30cacc4b5091e88b5ce1401d695b9ada3bf633f9d545f76583bcaeb0b8b20c29"
+    },
+    {
+      "file": "matlab_cp2tform.py",
+      "upstream_path": "preprocess/mtcnn_pytorch/src/matlab_cp2tform.py",
+      "upstream_sha256": "f14af9a900f8dd75e4a652854b4f46894af4910d7ccb3fa27659629594efbceb",
+      "local_sha256": "c7773f0a3cd52e548b9a6ab67fada0060833dae463780822bec776d7aadb1ea6"
+    },
+    {
+      "file": "convex_upsample.py",
+      "upstream_path": "utils.py",
+      "upstream_sha256": "8a5f1f5f17f78ec356ff1e1132697ba034afcb948b528c80fe855b40df31002a",
+      "local_sha256": "2463e64e21dc82ea3ff34bc0cb86d02b2b31bd36c49b32000c6a20814fb73fd4"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 """Actual orchestration contracts with fake CPU benchmark/model contexts."""
 from contextlib import contextmanager
 from pathlib import Path
+import os
 import tempfile
 import unittest
 import weakref
@@ -15,7 +16,7 @@ from protection_test import TARGETS, run_protection_test, testing_readiness
 class ProtectionTestRunnerTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
         targets = self.root / "data/phantomseal_cloaks"
         targets.mkdir(parents=True)
         for value in TARGETS.values():
@@ -82,6 +83,29 @@ class ProtectionTestRunnerTests(unittest.TestCase):
                 self.assertGreater(float(np.abs(np.asarray(jpeg).astype(float) - np.asarray(original)).mean()), 1)
         self.assertTrue(all(reference() is None for reference in self.model_refs))
 
+    def test_equivalent_input_paths_use_the_same_canonical_reference(self):
+        self.paths = {name: path.parent / "data" / ".." / path.name for name, path in self.paths.items()}
+        self.run_test(jpeg95=False)
+        self.assertEqual(self.calls[0]["reference"], self.paths["clean"].resolve())
+
+    @unittest.skipUnless(os.name == "nt", "Windows 8.3 path aliases")
+    def test_windows_short_alias_keeps_original_clean_reference(self):
+        import ctypes
+        folder = self.root / "Long source image fixture directory"
+        folder.mkdir()
+        for name, path in self.paths.items():
+            with Image.open(path) as source:
+                source.save(folder / path.name)
+        buffer = ctypes.create_unicode_buffer(32768)
+        size = ctypes.windll.kernel32.GetShortPathNameW(str(folder), buffer, len(buffer))
+        if not size or size >= len(buffer) or Path(buffer.value) == folder:
+            self.skipTest("This volume does not provide an 8.3 alias for the fixture.")
+        alias = Path(buffer.value)
+        self.assertEqual(alias.resolve(), folder)
+        self.paths = {name: alias / path.name for name, path in self.paths.items()}
+        self.run_test(jpeg95=False)
+        self.assertEqual(self.calls[0]["reference"], folder / "clean.png")
+
     def test_single_method_uses_final_internally_and_exposes_only_clean_final(self):
         result = self.run_test(mode="faceshield", jpeg95=False)
         self.assertEqual(len(self.calls), 1)
@@ -90,6 +114,25 @@ class ProtectionTestRunnerTests(unittest.TestCase):
         self.assertEqual([row["key"] for row in condition["rows"]], ["clean", "final"])
         self.assertEqual(condition["rows"][-1]["label"], "FaceShield")
         self.assertIsNone(condition["delta_final_minus_stage1"])
+
+    def test_all_backends_keep_original_reference_and_nullswap_label(self):
+        for backend in ("simswap", "diffswap", "infoswap", "uniface"):
+            with self.subTest(backend=backend):
+                # Separate outputs, as the fixture intentionally refuses overwrites.
+                result = run_protection_test(
+                    root_dir=self.root, output_dir=self.root / backend,
+                    source_path=self.paths["clean"], result_path=self.paths["final"],
+                    mode="nullswap", backend=backend, jpeg95=False,
+                    benchmark_runner=self.benchmark, models_context=self.models)
+                self.assertEqual(result["backend"], backend)
+                self.assertIn("NullSwap", result["conditions"][0]["rows"][-1]["label"])
+                self.assertEqual(self.calls[-1]["reference"], self.paths["clean"])
+
+    def test_invalid_backend_rejected_before_loading_models(self):
+        for backend in ("bad", "../simswap", True, None, []):
+            with self.subTest(backend=backend), self.assertRaises(ValueError):
+                self.run_test(backend=backend)
+        self.assertEqual(self.events, [])
 
     def test_failure_exits_shared_model_context_and_releases_its_last_reference(self):
         self.fail_call = 2

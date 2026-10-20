@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "dimensions": [
+    1280,
+    1280
+  ],
+  "default_matches_previous_pixels": true,
+  "repeat_is_identical": true,
+  "zero_is_unchanged": true,
+  "seed42_changed_pixels": 259897,
+  "cases": [
+    {
+      "case": "default",
+      "strength": 1,
+      "seed": 0,
+      "maximum_change": 8
+    },
+    {
+      "case": "strong",
+      "strength": 2.75,
+      "seed": 0,
+      "maximum_change": 22
+    },
+    {
+      "case": "repeat",
+      "strength": 2.75,
+      "seed": 0,
+      "maximum_change": 22
+    },
+    {
+      "case": "seed42",
+      "strength": 2.75,
+      "seed": 42,
+      "maximum_change": 22
+    },
+    {
+      "case": "zero",
+      "strength": 0,
+      "seed": 0,
+      "maximum_change": 0
+    }
+  ],
+  "server_started": false,
+  "network_blocked": true
+}

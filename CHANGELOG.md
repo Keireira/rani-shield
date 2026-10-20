@@ -1,7 +1,46 @@
 # Changelog
 
+## Foreground server launch — 2026-10-21
+
+- Make `manage.cmd run` and `make run` keep the server and live logs in the current terminal until exit; use Ctrl+C to stop it.
+- Route `launch.ps1` through the same foreground command without opening a browser. New launches create no background server, PID record or server log files.
+- Reject occupied ports and active recorded legacy servers without reusing or stopping them. Keep `status` for port inspection and `stop` only for verified background servers launched by an older version.
+
+## NullSwap parameter controls — 2026-10-21
+
+- Add NullSwap strength (0–4) and seed (0–4294967295) to the sidebar, Settings and presets, with defaults unchanged at strength 1 and seed 0.
+- Validate both parameters in the API and pipeline, record them in result metadata, and scale the mapped residual before PNG rounding.
+- Verify unchanged default pixels, reproducible seeds and strength bounds on the real model at 1280×1280 without starting a server.
+
+## NullSwap and selectable real-swap checks
+
+- Add standalone NullSwap using PhantomSeal's explicitly labelled reconstruction; bounded 256px residual mapped to output up to 1280px.
+- Add DiffSwap, InfoSwap and UniFace test adapters alongside SimSwap, with strict local checkpoint loading, native preprocessing and shared baseline gates.
+- Separate evaluation from the PhantomSeal ensemble so tests load only their required models.
+- Add verified optional archive import and `import-models` / `smoke-extra` management and Make targets.
+- Retain source/license notices and document preprocessing adaptations and weak-baseline limitations in `docs/NEW_MODELS.md`.
+
+
 ## Unreleased
 
+- Rename the application to **Rani Shield**, keeping FaceShield and PhantomSeal
+  as the names of the upstream algorithms.
+- Share parameter validation and image transformations across the API, pipeline
+  and benchmarks; release partially loaded models after failures.
+- Fix the optional FaceShield MTCNN loader and Windows short-path test assertions.
+- Add serverless `make smoke` with real GPU processing, PNG/JPEG95 swaps,
+  network blocking and Python/model file provenance checks.
+- Prepare project-local Python and Node runtimes under `.runtime/`, and bind
+  `.venv` to the local Python installation.
+- Enforce project-contained runtime resource paths, relative configuration and
+  local model caches/temporary files. Imports from older installations remain
+  explicit one-time copies.
+- Remove unused upstream Linux/distributed launch and face-parser modules from
+  the active application. The supported FaceShield implementation remains
+  `protector.py`; original research documentation and notices are retained.
+- Rewrite the README and Windows guides with explicit credits to both
+  **Why0912/FaceShield** and **kuai-lab/iccv25_faceshield**, their distinct roles,
+  the required model subset and the limits of the protection evidence.
 - Consolidate model weights, tokenizer/configuration files, the complete cloak
   bank, model manifests and model caches under `weights/`.
 - Update runtime, benchmark, download, import and launch paths to use the unified

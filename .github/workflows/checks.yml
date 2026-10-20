@@ -16,9 +16,21 @@ jobs:
       - name: Create CPU test environment
         shell: pwsh
         run: |
-          python -m venv .venv
+          $sourcePython = (Get-Command python.exe).Source
+          $sourceRoot = & $sourcePython -c "import sys; print(sys.base_prefix)"
+          & $sourcePython scripts/bootstrap_runtime.py --source $sourceRoot
+          .\.runtime\python\python.exe -m venv .venv
+          New-Item -ItemType Directory -Path .cache -Force | Out-Null
+          $nodeSource = (Get-Command node.exe).Source
+          $nodeVersion = & $nodeSource -p "process.version"
+          Invoke-WebRequest "https://raw.githubusercontent.com/nodejs/node/$nodeVersion/LICENSE" -OutFile .cache/node-LICENSE
+          .\.venv\Scripts\python.exe scripts/bootstrap_runtime.py --node-source $nodeSource --node-license .cache/node-LICENSE
+          . .\manage.ps1 -LibraryOnly
+          $previousEnvironment = Set-ProjectEnvironment
           .\.venv\Scripts\python.exe -m pip install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cpu
           .\.venv\Scripts\python.exe -m pip install -r requirements-windows.txt
+          .\.venv\Scripts\python.exe -I scripts/manage_checks.py runtime --root .
+          Restore-ProjectEnvironment $previousEnvironment
       - name: Check application contracts without model weights
         shell: pwsh
         run: .\manage.cmd test

@@ -1,6 +1,6 @@
 # PhantomSeal ensemble → FaceShield
 
-The editor supports **PhantomSeal → FaceShield**, **PhantomSeal only**, and
+Rani Shield supports **PhantomSeal → FaceShield**, **PhantomSeal only**, and
 **FaceShield only**. The default chain runs 1,000 PhantomSeal steps and then
 30 FaceShield steps. The original normalized photo remains the comparison
 baseline. Both the intermediate PhantomSeal PNG and final PNG can be exported.
@@ -46,8 +46,8 @@ loaded onto the GPU. This does not omit a feature branch from the objective.
 
 ## Local configuration
 
-All active resources are kept under `weights/`. `phantomseal_config.json`
-uses these relative defaults:
+All active resources are kept under `weights/`. Runtime paths must stay inside
+the project directory. `phantomseal_config.json` uses these relative defaults:
 
 ```json
 {

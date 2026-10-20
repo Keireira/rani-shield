@@ -2,7 +2,51 @@
 
 **The current local evidence does not establish reliable face-swap protection, and does not establish that chaining FaceShield improves PhantomSeal.** The application successfully generates images and real SimSwap comparisons. Those operational facts are separate from whether a swapper first copied the intended identity and whether a defense prevented that copying.
 
-The evidence below was collected on 20 October 2026. Versioned, sanitized measurements are in [six-source.json](evidence/six-source.json) and [resolution1280.json](evidence/resolution1280.json). Full public reports, when retained locally, are under `results/benchmarks/2026-10-20-full/` and its `resolution1280/` subdirectory; those HTML/image bundles are ignored runtime artifacts. Private user-photo tests are not part of this evidence set.
+The original comparison evidence was collected on 20 October 2026; later regression checks are dated below. Versioned, sanitized measurements are in [six-source.json](evidence/six-source.json) and [resolution1280.json](evidence/resolution1280.json). Full public reports, when retained locally, are under `results/benchmarks/2026-10-20-full/` and its `resolution1280/` subdirectory; those HTML/image bundles are ignored runtime artifacts. Private user-photo tests are not part of this evidence set.
+
+## Foreground launcher — 2026-10-21
+
+- `manage.cmd test`: **165 Python tests discovered, 163 passed, 2 skipped**, plus passing management, foreground-process and frontend checks. The skips still require unavailable Windows 8.3 aliases.
+- A harmless local Python fixture verified that `run` waits for completion, streams output before completion, preserves arguments, reports failures and restores environment variables. It also checked refusal of occupied ports and legacy servers, and absence of new PID/log files. Expected interruption exit codes were tested; no console interrupt was sent to a running application.
+- Both `manage.cmd run -DryRun` and `make run PORT=7877 ARGS=-DryRun` selected the foreground command. No HTTP server was started or stopped for these checks.
+
+## NullSwap parameter controls — 2026-10-21
+
+- `manage.cmd test`: **165 Python tests discovered, 163 passed, 2 skipped**, plus passing PowerShell and frontend checks. The skips require Windows 8.3 aliases unavailable on this volume. Coverage includes parameter validation, mode-specific forwarding, API payloads, preset compatibility and UI state.
+- Five real GPU runs at **1280×1280** passed with network connections blocked and no server started. Default strength 1 / seed 0 reproduced the previous implementation's output pixels exactly. Repeated strength 2.75 / seed 0 produced identical pixels; seed 42 changed 259,897 pixels. Strength 0 added no perturbation to the normalized input.
+- Observed maximum channel changes were **8** at strength 1, **22** at strength 2.75 and **0** at strength 0, within the declared bounds. These checks establish parameter behavior, not stronger protection against face swapping. See the [machine-readable record](evidence/nullswap-controls-verification.json).
+
+## NullSwap and four-backend integration — 2026-10-20
+
+- `manage.cmd test`: **160 Python tests discovered, 158 passed, 2 skipped**, plus PowerShell and frontend checks. The skipped tests require Windows 8.3 aliases unavailable on this volume. Tests include independent NullSwap dispatch, backend selection/readiness, native alignment failures, strict checkpoint loading, operator/sampler parity and verified optional-model import.
+- `manage.cmd smoke-extra`: actual NullSwap at **1280×1280**, then **16 real outputs** from SimSwap, DiffSwap, InfoSwap and UniFace across PNG/JPEG95. DiffSwap used 200 DDIM steps for each distinct input. [Machine-readable evidence](evidence/additional-models-verification.json) records timing and model paths.
+- The run blocked network connections and audited Python file/module access and `torch.load`, `safetensors.safe_open`, `dlib.shape_predictor` arguments. **No outside-project Python files/modules, outside-weights model files, or network attempts were observed.** Native Windows/driver access is outside that audit.
+- The existing PhantomSeal → FaceShield chain was rerun after the evaluator refactor: **1280×1280**, optional MTCNN, six PNG/JPEG95 SimSwap outputs in **38.63s**. Its [separate regression record](evidence/chain-backend-refactor-verification.json) also passed the offline/local-path audit.
+- All optional checkpoints and InfoSwap readout statistics are in `weights/`; the importer verified 20 model-specific files. No server was started.
+
+For this public portrait (enlarged to exercise output size), the PNG observations were:
+
+| Backend | Unprotected cosine | NullSwap cosine | Baseline interpretation |
+|---|---:|---:|---|
+| SimSwap | 0.8556 | 0.7889 | Numeric gate met; visual confirmation still required |
+| DiffSwap | 0.4178 | 0.3491 | Inconclusive: weak baseline |
+| InfoSwap | 0.6491 | 0.6658 | Inconclusive: weak baseline |
+| UniFace | 0.6727 | 0.6501 | Inconclusive: weak baseline |
+
+These are execution observations, not a protection ranking or a success rate. All three added swappers had weak baselines on this fixture in both conditions. Even SimSwap's numeric gate is insufficient without a recognizable baseline. NullSwap is the PhantomSeal reconstruction, with fixed gain 1 and an observed maximum change of 8/255, not an original-author reproduction. See [NEW_MODELS.md](NEW_MODELS.md).
+
+## Rani Shield refactor verification
+
+The project-local installation in `F:\Git\rani-shield` was verified after refactoring and renaming. The machine-readable record is [refactor-verification.json](evidence/refactor-verification.json).
+
+- `make test`: **111 Python tests discovered, 109 passed, 2 skipped**, plus passing PowerShell and frontend checks. The two skips require real Windows 8.3 aliases, which this F: volume does not supply. Canonical-path assertions that failed on the GitHub runner are corrected; the workflow now prepares local Python and Node before testing. The updated workflow has not been run remotely.
+- `make setup` reused the installed packages without downloads and rebased 29 console/GUI entry points. `make doctor` and `pip check` passed.
+- Python, its standard library, packages and the frontend test runtime are inside `.runtime/` and `.venv/`. No symlinks or junctions were found in the project scan. Runtime model/configuration overrides outside the project are rejected.
+- `make smoke` completed in **38.36 seconds** on the RTX 5070 Ti: a **1280×1280** PhantomSeal → FaceShield result, the optional FaceShield MTCNN objective, and **six real SimSwap outputs** across PNG/JPEG95. This used **10 + 1 steps** and a deliberately enlarged public portrait, so it establishes execution rather than protection effectiveness.
+- The smoke process observed **zero external Python file accesses, zero imported module files outside the project, and zero network attempts**. All 16 model files observed through `torch.load` and `safetensors.safe_open` were under `weights/`. The audit does not trace native Windows/driver file access; those remain system prerequisites.
+- All **216 imported PhantomSeal-cache records** (214 cloak images and two ensemble checkpoints) matched their recorded SHA-256. Historical source paths in manifests are provenance, not live dependencies.
+
+No HTTP server was started for these checks.
 
 ## Scope of the measurement
 
@@ -84,9 +128,9 @@ This installation therefore does not establish two distinct FaceShield ArcFace n
 
 ## Operational validation versus efficacy
 
-After consolidation under `weights/`, **95 Python tests** plus PowerShell and frontend checks passed. The migration verified the original resource bytes, removed an identical SimSwap alias only after checking its canonical copy, and left all active weights inside the central directory. The three local MTCNN states match the pinned packaged detector's parameters and public-image detections. A fresh 1280 × 1280 run loaded the complete ensemble and FaceShield from the new paths, using 10 PhantomSeal steps and 1 FaceShield step, then generated real PNG/JPEG95 SimSwap outputs. This is a bounded execution check, not an efficacy evaluation. The current inventory and checks are recorded in [weights-layout.json](evidence/weights-layout.json).
+During the earlier consolidation under `weights/`, **95 Python tests** plus PowerShell and frontend checks passed. The migration verified the original resource bytes, removed an identical SimSwap alias only after checking its canonical copy, and left all active weights inside the central directory. The three local MTCNN states match the pinned packaged detector's parameters and public-image detections. A fresh 1280 × 1280 run loaded the complete ensemble and FaceShield from the new paths, using 10 PhantomSeal steps and 1 FaceShield step, then generated real PNG/JPEG95 SimSwap outputs. This is a bounded execution check, not an efficacy evaluation. That inventory and check record is preserved in [weights-layout.json](evidence/weights-layout.json).
 
-The standalone checkout was checked again after assembly: **81 Python tests**, PowerShell management checks and frontend regressions passed. Its own Python 3.11 environment passed `pip check`, CUDA was available, and model readiness found all four branches and the 214-image bank. The new server uses port 7876 independently of the earlier installation.
+At the earlier standalone-application assembly, **81 Python tests**, PowerShell management checks and frontend regressions passed. Its Python 3.11 environment passed `pip check`, CUDA was available, and model readiness found all four branches and the 214-image bank. Port 7876 was selected independently of the original installation.
 
 A fresh run from this checkout completed the default 1,000 + 30 step chain on an explicitly enlarged public 1280 × 1280 input, downloaded and decoded the final PNG, preserved the intermediate PNG, and generated all six real swap outputs for PNG/JPEG95. The UI kept comparison effects hidden pending visual baseline acceptance. See the path-free [operational record](evidence/studio-smoke.json). This reused public identity is a software execution check, not additional independent efficacy evidence.
 

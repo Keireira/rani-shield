@@ -9,12 +9,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib.metadata
-import io
 import json
 import math
 import os
 import re
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -24,6 +22,7 @@ from asset_paths import MTCNN_FILES, weight_path
 from PIL import Image
 
 from benchmark_chain import atomic_json, benchmark, load_rgb, sha256_file, swap_models
+from image_io import condition_image
 
 
 def canonical_hash(value):
@@ -77,6 +76,7 @@ def check_editor_idle(port):
 
 
 def environment_fingerprint(root):
+    root = Path(root).resolve()
     from phantomseal_assets import configuration, bank_images
     config = configuration(root)
     checkpoint = config["checkpoint_dir"]
@@ -91,7 +91,9 @@ def environment_fingerprint(root):
     weights += [p for directory in (weight_path(root, "sd15"), weight_path(root, "ip-adapter", "models", "image_encoder"))
                 for p in directory.rglob("*") if p.is_file()]
     code = [root / name for name in ("protection_pipeline.py", "protector.py", "phantomseal_runtime.py",
-                                     "phantomseal_assets.py", "ensemble_encoders.py", "phantomseal_config.json", "asset_paths.py")]
+                                     "phantomseal_assets.py", "ensemble_encoders.py", "phantomseal_config.json", "asset_paths.py",
+                                     "image_io.py", "runtime_contracts.py", "scripts/runtime_environment.py",
+                                     "scripts/runtime_environment.json")]
     code += list((root / "utils").rglob("*.py")) + list((root / "third_party").rglob("*.py"))
     code += list((root / "models").glob("*.py"))
     files = sorted(set(weights + code + bank_images(config["cloak_dir"])))
@@ -119,18 +121,6 @@ def reusable_preparation(folder, fingerprint):
         return None
 
 
-def condition_image(image, condition):
-    if condition == "png":
-        return image.copy()
-    if condition != "jpeg95":
-        raise ValueError("Unknown input transformation.")
-    stream = io.BytesIO()
-    image.save(stream, format="JPEG", quality=95, subsampling=2)
-    stream.seek(0)
-    with Image.open(stream) as decoded:
-        return decoded.convert("RGB")
-
-
 def preflight_faces(manifest, out, root):
     """Reject inputs the application cannot process before a long optimization."""
     from phantomseal_runtime import load_mtcnn
@@ -154,8 +144,8 @@ def run(args):
     # Reject invalid gates before input/model checks or importing the GPU runtime.
     minimum_baseline = baseline_cutoff(getattr(args, "minimum_baseline", .80))
     root = args.root.resolve()
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
+    from scripts.runtime_environment import configure_environment
+    configure_environment(root)
     manifest = read_manifest(args.manifest.resolve(), root)
     if args.max_sources is not None:
         if args.max_sources < 1:

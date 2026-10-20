@@ -9,6 +9,36 @@ from pathlib import Path
 import sys
 import tempfile
 
+PROJECT = Path(__file__).resolve().parents[1]
+if str(PROJECT) not in sys.path:
+    sys.path.insert(0, str(PROJECT))
+
+from asset_paths import project_path
+
+
+def runtime_paths(root, *, executable=None, base_prefix=None, search_paths=None):
+    """Check interpreter, stdlib, import search paths and declarative .pth links."""
+    root = Path(root).resolve()
+    paths = {"executable": executable or sys.executable, "base_prefix": base_prefix or sys.base_prefix}
+    paths.update({f"sys.path[{index}]": value for index, value in enumerate(
+        sys.path if search_paths is None else search_paths) if value})
+    errors = []
+    for label, value in paths.items():
+        try:
+            project_path(root, value)
+        except ValueError:
+            errors.append(f"{label} points outside the project: {value}")
+    site = project_path(root, ".venv/Lib/site-packages")
+    for path in site.glob("*.pth"):
+        try:
+            project_path(root, path)
+            for line in path.read_text(encoding="utf-8-sig").splitlines():
+                line = line.strip()
+                if line and not line.startswith(("#", "import ")):
+                    project_path(root, path.parent / line)
+        except (OSError, ValueError) as error:
+            errors.append(f"{path.name}: {error}")
+    return {"ready": not errors, "root": str(root), **paths, "errors": errors}
 
 def environment(root, version=None, version_info=None):
     try:
@@ -51,22 +81,23 @@ def environment(root, version=None, version_info=None):
 
 
 def configure(root, checkpoints, cloaks):
-    root, checkpoints, cloaks = (Path(p).expanduser().resolve() for p in (root, checkpoints, cloaks))
+    root = Path(root).resolve()
+    checkpoints, cloaks = (project_path(root, p) for p in (checkpoints, cloaks))
     if not checkpoints.is_dir() or not cloaks.is_dir():
         raise ValueError("Choose the extracted checkpoints and data/vggface2_cloak/mix_full directories.")
     required = [checkpoints / "hififace/hififace_opensource_299999.ckpt",
                 checkpoints / "faceshifter/model_ir_se50.pth"]
     simswap = checkpoints / "simswap/arcface_checkpoint.tar"
-    if not simswap.is_file():
-        simswap = root / "weights/simswap/arcface_checkpoint.tar"
-    missing = [str(p) for p in [*required, simswap] if not p.is_file() or p.stat().st_size == 0]
-    images = [p for p in cloaks.rglob("*") if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg"}]
+    required = [project_path(root, p) for p in [*required, simswap]]
+    missing = [str(p) for p in required if not p.is_file() or p.stat().st_size == 0]
+    images = [project_path(root, p) for p in cloaks.rglob("*") if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg"}]
     if missing:
         raise ValueError("Missing ensemble checkpoints: " + ", ".join(missing))
     if len(images) < 214:
         raise ValueError(f"The full mix_full bank needs at least 214 images; found {len(images)}.")
-    config = dict(checkpoint_dir=str(checkpoints), cloak_dir=str(cloaks), expected_cloaks=214)
-    target = root / "phantomseal_config.json"
+    config = dict(checkpoint_dir=checkpoints.relative_to(root).as_posix(),
+                  cloak_dir=cloaks.relative_to(root).as_posix(), expected_cloaks=214)
+    target = project_path(root, "phantomseal_config.json")
     temporary = None
     try:
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=root, prefix=".phantomseal-config-", suffix=".tmp", delete=False) as output:
@@ -83,9 +114,13 @@ def configure(root, checkpoints, cloaks):
 def doctor(root):
     root = Path(root).resolve()
     print(f"Model storage: {root / 'weights'}")
+    isolation = runtime_paths(root)
+    print(f"{'OK' if isolation['ready'] else 'FAIL'} Local Python: {isolation['executable']}; base {isolation['base_prefix']}")
+    for error in isolation["errors"]:
+        print(f"  {error}")
     report = environment(root)
-    good = report["ready"]
-    print(f"{'OK' if good else 'FAIL'} Environment: Python 3.11, torch 2.7.1+cu128, torchvision 0.22.1+cu128")
+    good = report["ready"] and isolation["ready"]
+    print(f"{'OK' if report['ready'] else 'FAIL'} Environment: Python 3.11, torch 2.7.1+cu128, torchvision 0.22.1+cu128")
     for error in report["errors"]:
         print(f"  {error}")
     sys.path.insert(0, str(root))
@@ -101,6 +136,9 @@ def doctor(root):
         complete = set(phantom.get("branches", [])) == branches and phantom.get("cloak_count", 0) >= 214
         print(f"{'OK' if complete else 'FAIL'} PhantomSeal: all 4 branches; {phantom.get('cloak_count', 0)}/214 cloak images")
         good = good and complete
+        from protection_test import testing_readiness
+        for name, status in testing_readiness(root)["backends"].items():
+            print(f"{'OK' if status['ready'] else 'OPTIONAL'} Test {status['label']}: {status['message']}")
     except Exception as error:
         good = False
         print(f"FAIL Model files/configuration: {error}")
@@ -121,7 +159,7 @@ def doctor(root):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("environment", "configure", "doctor"))
+    parser.add_argument("command", choices=("environment", "runtime", "configure", "doctor"))
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--checkpoints", type=Path)
     parser.add_argument("--cloaks", type=Path)
@@ -129,6 +167,10 @@ def main():
     if args.command == "environment":
         print(json.dumps(environment(args.root)))
         return 0
+    if args.command == "runtime":
+        report = runtime_paths(args.root)
+        print(json.dumps(report))
+        return 0 if report["ready"] else 1
     if args.command == "doctor":
         return doctor(args.root)
     if args.checkpoints is None or args.cloaks is None:

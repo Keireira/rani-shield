@@ -1,0 +1,68 @@
+{
+  "repository": "https://github.com/wl-zhao/DiffSwap",
+  "commit": "c316952f425347a3fd5a7e8bcc624958be34265f",
+  "files": [
+    {
+      "upstream_path": "ldm/modules/diffusionmodules/openaimodel.py",
+      "vendored_path": "openaimodel.py",
+      "upstream_sha256": "a95df9357607961dcbed357d24742b26624cef2f0c340810ee786762232d2916",
+      "vendored_sha256": "a059717d8daec41eb2890adbb164c9ee1da3f253c5172e36e4ffd06c1cc03add"
+    },
+    {
+      "upstream_path": "ldm/modules/diffusionmodules/model.py",
+      "vendored_path": "autoencoder_modules.py",
+      "upstream_sha256": "0d0f6380c293f513f5ad80c5e988a5fccffa2e904aaa5ce3ca089aeba014f4eb",
+      "vendored_sha256": "c110a9c4e45ddf67040c780380063a00f150c63b0cad3f3a47347810461883f8"
+    },
+    {
+      "upstream_path": "ldm/modules/diffusionmodules/util.py",
+      "vendored_path": "diffusion_util.py",
+      "upstream_sha256": "53e5aefa5869ec710fc6c904606543081ab26c0e51a1c5a1b6b5869d1193f8f4",
+      "vendored_sha256": "d7dde6a84ae5738b490d1713725bfcc141c307ee411274e684c7785d969afbe7"
+    },
+    {
+      "upstream_path": "ldm/modules/attention.py",
+      "vendored_path": "attention.py",
+      "upstream_sha256": "35c6acdcad931c7e2c0f21652fbb1b3a7e68eeffcc7c1787a29a5c195b92895f",
+      "vendored_sha256": "7d88acea276dc3ac544b8d9d07080c152d31176574ca19c98cba67e58d99f942"
+    },
+    {
+      "upstream_path": "src/arcface_torch/backbones/iresnet.py",
+      "vendored_path": "iresnet.py",
+      "upstream_sha256": "edfed378a68172584667ef777ce8cd26f2a20f60eafedf9a56034208811c3244",
+      "vendored_sha256": "d3794bb765e40cc3d33ca97353d565fc1ed7a502311d15e715c88059d8078d58"
+    },
+    {
+      "upstream_path": "data_preprocessing/align/matlab_cp2tform.py",
+      "vendored_path": "matlab_cp2tform.py",
+      "upstream_sha256": "b2e87886c8586dac8bef7ed1695d03a56146dce668bf0d6935496b21906fe865",
+      "vendored_sha256": "cab183fcb7098c1cc6499841774f31820cd3a006f70b13e341c905bc8eb6092a"
+    },
+    {
+      "upstream_path": "data_preprocessing/align/align_trans.py",
+      "vendored_path": "align_trans.py",
+      "upstream_sha256": "fe43508466254a105e1edd35a6d89aa8daa997c33bae00bbb182a9fe846d1f30",
+      "vendored_sha256": "54c2c80c1d6c3f4594490fe168e81251e132bca58f2a3c5817fb24f977e0c8f6"
+    }
+  ],
+  "preprocessing_reference": {
+    "repository": "https://github.com/LiangqinRen/PhantomSeal",
+    "commit": "f7705791920abddaa09d0f54d0a2e448b48e07d5",
+    "path": "src/diffswap/base.py"
+  },
+  "validation": {
+    "model_parameters": 530568161,
+    "strict_cpu_model_assembly": true,
+    "official_ddim_toy_parity_max_absolute_difference": 1.1920928955078125e-07,
+    "toy_reference": "ldm/models/diffusion/ddim.py from pinned DiffSwap commit; only device buffer registration changed for CPU",
+    "cpu_tests": 10,
+    "real_png_benchmark": "results/verification/new-backends/diffswap/comparison.json",
+    "native_output_size": [
+      256,
+      256
+    ],
+    "ddim_steps": 200,
+    "offline_network_connect_blocked": true,
+    "baseline_status": "inconclusive_weak_baseline"
+  }
+}

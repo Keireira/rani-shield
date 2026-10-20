@@ -22,14 +22,14 @@ import json
 import math
 import os
 import platform
-import sys
 import tempfile
 import time
 from pathlib import Path
 from asset_paths import weight_path
 
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image
+from image_io import load_rgb
 
 
 def sha256_file(path: Path) -> str:
@@ -38,11 +38,6 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def load_rgb(path: Path) -> Image.Image:
-    with Image.open(path) as opened:
-        return ImageOps.exif_transpose(opened).convert("RGB")
 
 
 def validate_images(images: dict[str, Image.Image], target: Image.Image) -> None:
@@ -124,16 +119,17 @@ def detection(engine, image):
 def swap_models(root: Path, device: str | None = None):
     """Load once for a series of real generator calls; always release GPU models."""
     import torch
-    from phantomseal_runtime import PhantomSealProtector, load_generator_weights
+    from phantomseal_runtime import load_generator_weights
+    from face_evaluation import SimSwapEvaluator
     from third_party.phantomseal.simswap_networks import Generator_Adain_Upsample
 
-    engine = PhantomSealProtector(root, device=device)
+    engine = SimSwapEvaluator(root, device=device)
     generator = None
     try:
         torch.manual_seed(0)
         np.random.seed(0)
         print("Loading audited ArcFace, FaceNet, and SimSwap weights", flush=True)
-        engine.load_models()
+        engine.load()
         generator = Generator_Adain_Upsample(input_nc=3, output_nc=3, latent_size=512,
                                             n_blocks=9, deep=False)
         state = load_generator_weights(weight_path(root, "simswap", "latest_net_G.pth"))
@@ -154,8 +150,6 @@ def benchmark(root: Path, clean_path: Path, stage1_path: Path, final_path: Path,
     import torch.nn.functional as F
 
     root = root.resolve()
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
     from phantomseal_runtime import image_tensor
     from benchmark_alignment import aligned_crop
 
@@ -294,6 +288,8 @@ def main() -> None:
     parser.add_argument("--device", choices=("cuda", "cpu"))
     parser.add_argument("--minimum-baseline", type=float, default=.8, help="Heuristic minimum clean-swap cosine; not confidence. Visual baseline review is still required.")
     args = parser.parse_args()
+    from scripts.runtime_environment import configure_environment
+    configure_environment(args.root)
     target = args.target or args.root / "data" / "phantomseal_cloaks" / "cage.jpg"
     benchmark(args.root, args.clean, args.stage1, args.final, target, args.out, args.device, minimum_baseline=args.minimum_baseline)
 

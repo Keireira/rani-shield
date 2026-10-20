@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import List
 
 import torch
@@ -7,6 +8,7 @@ from diffusers.pipelines.controlnet import MultiControlNetModel
 from PIL import Image
 from safetensors import safe_open
 from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
+from asset_paths import project_path
 
 from .utils import is_torch2_available, get_generator
 
@@ -66,15 +68,16 @@ class MLPProjModel(torch.nn.Module):
 class IPAdapter:
     def __init__(self, sd_pipe, image_encoder_path, ip_ckpt, device, num_tokens=4):
         self.device = device
-        self.image_encoder_path = image_encoder_path
-        self.ip_ckpt = ip_ckpt
+        root = Path(__file__).resolve().parents[3]
+        self.image_encoder_path = str(project_path(root, image_encoder_path))
+        self.ip_ckpt = str(project_path(root, ip_ckpt))
         self.num_tokens = num_tokens
 
         self.pipe = sd_pipe.to(self.device)
         self.set_ip_adapter()
 
         # load image encoder
-        self.image_encoder = CLIPVisionModelWithProjection.from_pretrained(self.image_encoder_path).to(
+        self.image_encoder = CLIPVisionModelWithProjection.from_pretrained(self.image_encoder_path, local_files_only=True).to(
             self.device, dtype=torch.float16
         )
         self.clip_image_processor = CLIPImageProcessor()
@@ -131,7 +134,7 @@ class IPAdapter:
                     elif key.startswith("ip_adapter."):
                         state_dict["ip_adapter"][key.replace("ip_adapter.", "")] = f.get_tensor(key)
         else:
-            state_dict = torch.load(self.ip_ckpt, map_location="cpu")
+            state_dict = torch.load(self.ip_ckpt, map_location="cpu", weights_only=True)
         self.image_proj_model.load_state_dict(state_dict["image_proj"])
         ip_layers = torch.nn.ModuleList(self.pipe.unet.attn_processors.values())
         ip_layers.load_state_dict(state_dict["ip_adapter"])

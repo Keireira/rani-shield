@@ -256,12 +256,8 @@ def _representatives(pairs, count):
 
 
 def _font(size=16):
-    for name in ("C:/Windows/Fonts/segoeui.ttf", "DejaVuSans.ttf"):
-        try:
-            return ImageFont.truetype(name, size)
-        except OSError:
-            pass
-    return ImageFont.load_default()
+    # Pillow bundles this face with the application environment.
+    return ImageFont.load_default(size=size)
 
 
 def _quality_html(metadata):

@@ -1,0 +1,129 @@
+{
+  "application": "Rani Shield",
+  "date_utc": "2026-10-20T18:00:47.942844+00:00",
+  "purpose": "Reduced-step execution and local-dependency verification; not an efficacy evaluation.",
+  "source": "Upscaled public repository portrait, not native 1280-resolution evidence.",
+  "python": ".venv\\Scripts\\python.exe",
+  "python_base": ".runtime\\python",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "elapsed_seconds": 52.29,
+  "dimensions": [
+    1280,
+    1280
+  ],
+  "phantomseal_steps": 0,
+  "faceshield_steps": 0,
+  "optional_mtcnn_enabled": false,
+  "swap_rows": 16,
+  "mode": "nullswap",
+  "backends": [
+    "simswap",
+    "diffswap",
+    "infoswap",
+    "uniface"
+  ],
+  "comparisons": {
+    "simswap": [
+      {
+        "condition": "png",
+        "scores": {
+          "clean": 0.8555985689163208,
+          "final": 0.78886878490448
+        }
+      },
+      {
+        "condition": "jpeg95",
+        "scores": {
+          "clean": 0.856037974357605,
+          "final": 0.7888200283050537
+        }
+      }
+    ],
+    "diffswap": [
+      {
+        "condition": "png",
+        "scores": {
+          "clean": 0.41780608892440796,
+          "final": 0.3490658402442932
+        }
+      },
+      {
+        "condition": "jpeg95",
+        "scores": {
+          "clean": 0.4011867046356201,
+          "final": 0.40285301208496094
+        }
+      }
+    ],
+    "infoswap": [
+      {
+        "condition": "png",
+        "scores": {
+          "clean": 0.649068295955658,
+          "final": 0.6658144593238831
+        }
+      },
+      {
+        "condition": "jpeg95",
+        "scores": {
+          "clean": 0.6510089039802551,
+          "final": 0.6603313088417053
+        }
+      }
+    ],
+    "uniface": [
+      {
+        "condition": "png",
+        "scores": {
+          "clean": 0.6727020144462585,
+          "final": 0.6501227021217346
+        }
+      },
+      {
+        "condition": "jpeg95",
+        "scores": {
+          "clean": 0.6651389598846436,
+          "final": 0.6467253565788269
+        }
+      }
+    ]
+  },
+  "conditions": [
+    "png",
+    "jpeg95"
+  ],
+  "outside_python_file_accesses": [],
+  "outside_module_files": [],
+  "network_attempts": [],
+  "model_files": [
+    "weights/diffswap/diffswap.pth",
+    "weights/diffswap/glint360k_r100.pth",
+    "weights/diffswap/shape_predictor_68_face_landmarks.dat",
+    "weights/facenet/facenet_vggface2.pt",
+    "weights/infoswap/model_128_ir_se50.pth",
+    "weights/infoswap/readout/readout_layer0.pth",
+    "weights/infoswap/readout/readout_layer1.pth",
+    "weights/infoswap/readout/readout_layer10.pth",
+    "weights/infoswap/readout/readout_layer2.pth",
+    "weights/infoswap/readout/readout_layer3.pth",
+    "weights/infoswap/readout/readout_layer4.pth",
+    "weights/infoswap/readout/readout_layer5.pth",
+    "weights/infoswap/readout/readout_layer6.pth",
+    "weights/infoswap/readout/readout_layer7.pth",
+    "weights/infoswap/readout/readout_layer8.pth",
+    "weights/infoswap/readout/readout_layer9.pth",
+    "weights/infoswap/w_kernel_smooth/ckpt_ks_E.pth",
+    "weights/infoswap/w_kernel_smooth/ckpt_ks_G.pth",
+    "weights/infoswap/w_kernel_smooth/ckpt_ks_I.pth",
+    "weights/mtcnn/onet.pt",
+    "weights/mtcnn/pnet.pt",
+    "weights/mtcnn/rnet.pt",
+    "weights/nullswap/epoch_0001_step_012000.pth",
+    "weights/simswap/arcface_checkpoint.tar",
+    "weights/simswap/latest_net_G.pth",
+    "weights/uniface/500000.pt"
+  ],
+  "models_outside_weights": [],
+  "audit_scope": "Python open events, imported module files, torch.load, safetensors.safe_open and dlib.shape_predictor inputs. OS/driver native file access is not traced.",
+  "passed": true
+}

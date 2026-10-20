@@ -129,7 +129,7 @@ def sequential_objective(delta, original, view_fn, branches, references):
 
 class PhantomSealProtector:
     def __init__(self, root_dir, device=None):
-        self.root = Path(root_dir)
+        self.root = Path(root_dir).resolve()
         self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
         self.arcface = self.encoder = self.facenet = self.detector = None
         self.branches = {}
@@ -138,6 +138,15 @@ class PhantomSealProtector:
     def load_models(self, progress=None):
         if self._loaded:
             return
+        try:
+            self._load_models(progress)
+        except BaseException:
+            self.close()
+            raise
+
+    def _load_models(self, progress):
+        from scripts.runtime_environment import configure_environment
+        configure_environment(self.root)
         if progress:
             progress(.01, "Loading PhantomSeal ensemble")
         from ensemble_encoders import load_ensemble
@@ -262,8 +271,8 @@ class PhantomSealProtector:
         return F.grid_sample(image, grid, mode="bilinear", padding_mode="zeros", align_corners=False)
 
     def protect(self, input_path, output_dir, iterations=1000, progress=None):
-        if not isinstance(iterations, int) or not 10 <= iterations <= 2000:
-            raise ValueError("PhantomSeal steps must be between 10 and 2000.")
+        from runtime_contracts import number
+        iterations = number(iterations, "phantom_iterations", 10, 2000, integer=True)
         started = time.perf_counter()
         self.load_models(progress)
         if self.device.type == "cuda":

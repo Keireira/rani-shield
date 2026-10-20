@@ -1,17 +1,16 @@
-"""Sequential PhantomSeal -> FaceShield with a clean comparison baseline."""
+"""Independent protection modes and a sequential chain, with a clean comparison baseline."""
 from __future__ import annotations
 import gc
 import importlib.util
 import json
-import math
 import threading
 import time
 from pathlib import Path
 from asset_paths import weight_path
 import numpy as np
-from PIL import Image, ImageOps
-
-MODES = ("phantomseal_faceshield", "phantomseal", "faceshield")
+from PIL import Image
+from image_io import fit_rgb
+from runtime_contracts import MODES, analysis_size as validate_analysis_size, protection_parameters
 
 
 def readiness(root_dir):
@@ -29,7 +28,8 @@ def readiness(root_dir):
         "sd15/tokenizer/vocab.json", "sd15/tokenizer/merges.txt",
         "ip-adapter/models/image_encoder/config.json", "ip-adapter/models/image_encoder/model.safetensors"]
     fs_missing = [str(weight_path(root, name).relative_to(root)) for name in required_fs if not weight_path(root, name).is_file()]
-    return {"phantomseal": phantom,
+    from nullswap_runtime import readiness as nullswap_readiness
+    return {"phantomseal": phantom, "nullswap": nullswap_readiness(root),
             "faceshield": {"ready": not fs_missing, "message": "Ready" if not fs_missing else "Missing: " + ", ".join(fs_missing)}}
 
 
@@ -41,37 +41,35 @@ def release_gpu():
 
 
 class ProtectionPipeline:
-    def __init__(self, root_dir, phantom_factory=None, shield_factory=None):
-        self.root = Path(root_dir)
+    def __init__(self, root_dir, phantom_factory=None, shield_factory=None, nullswap_factory=None):
+        self.root = Path(root_dir).resolve()
         self._phantom_factory = phantom_factory
         self._shield_factory = shield_factory
+        self._nullswap_factory = nullswap_factory
         self._lock = threading.RLock()
         self._loaded = False
 
     def protect(self, input_path, output_dir, max_size=1280, iterations=30, noise_clamp=12,
-                step_size=1, analysis_size=512, progress=None, mode="phantomseal_faceshield", phantom_iterations=1000):
-        if mode not in MODES:
-            raise ValueError("Unknown protection mode.")
-        if not isinstance(max_size, int) or not 128 <= max_size <= 1280:
-            raise ValueError("Maximum long edge must be between 128 and 1280.")
-        if not isinstance(iterations, int) or not 1 <= iterations <= 200:
-            raise ValueError("FaceShield steps must be between 1 and 200.")
-        if not isinstance(phantom_iterations, int) or not 10 <= phantom_iterations <= 2000:
-            raise ValueError("PhantomSeal steps must be between 10 and 2000.")
-        if not math.isfinite(noise_clamp) or not 1 <= noise_clamp <= 32 or not math.isfinite(step_size) or not .25 <= step_size <= 4:
-            raise ValueError("Invalid FaceShield noise limit or step size.")
+                step_size=1, analysis_size=512, progress=None, mode="phantomseal_faceshield", phantom_iterations=1000,
+                nullswap_strength=1.0, nullswap_seed=0):
+        params = protection_parameters({
+            "mode": mode, "max_size": max_size, "iterations": iterations,
+            "phantom_iterations": phantom_iterations, "noise_clamp": noise_clamp, "step_size": step_size,
+            "nullswap_strength": nullswap_strength, "nullswap_seed": nullswap_seed,
+        })
+        max_size, iterations, phantom_iterations = (params[name] for name in ("max_size", "iterations", "phantom_iterations"))
+        noise_clamp, step_size = params["noise_clamp"], params["step_size"]
+        analysis_size = validate_analysis_size(analysis_size)
         with self._lock:
-            if not self._phantom_factory and mode != "faceshield" and not readiness(self.root)["phantomseal"]["ready"]:
-                raise RuntimeError("PhantomSeal ensemble is not ready. " + readiness(self.root)["phantomseal"]["message"])
+            if not self._phantom_factory and mode in ("phantomseal", "phantomseal_faceshield"):
+                available = readiness(self.root)["phantomseal"]
+                if not available["ready"]:
+                    raise RuntimeError("PhantomSeal ensemble is not ready. " + available["message"])
             started = time.perf_counter()
             folder = Path(output_dir).resolve()
             folder.mkdir(parents=True, exist_ok=True)
-            with Image.open(input_path) as opened:
-                original = ImageOps.exif_transpose(opened).convert("RGB")
-                factor = min(1., max_size / max(original.size))
-                size = (max(1, round(original.width * factor)), max(1, round(original.height * factor)))
-                if original.size != size:
-                    original = original.resize(size, Image.Resampling.LANCZOS)
+            original = fit_rgb(input_path, max_size)
+            size = original.size
             clean_path = folder / "original.png"
             original.save(clean_path)
             next_input = clean_path
@@ -82,7 +80,19 @@ class ProtectionPipeline:
                     progress(value, message)
             self._loaded = True
             try:
-                if mode != "faceshield":
+                if mode == "nullswap":
+                    from nullswap_runtime import NullSwapProtector
+                    engine = self._nullswap_factory() if self._nullswap_factory else NullSwapProtector(self.root)
+                    try:
+                        report = engine.protect(next_input, folder / "nullswap", max_size=max_size, progress=notify,
+                                                strength=params["nullswap_strength"], seed=params["nullswap_seed"])
+                        next_input = Path(report["output_path"])
+                        stages.append({"name": "NullSwap (PhantomSeal reconstruction)", **report})
+                    finally:
+                        engine.close()
+                        del engine
+                        release_gpu()
+                if mode in ("phantomseal", "phantomseal_faceshield"):
                     from phantomseal_runtime import PhantomSealProtector
                     engine = self._phantom_factory() if self._phantom_factory else PhantomSealProtector(self.root)
                     end = .60 if mode == "phantomseal_faceshield" else 1.
@@ -100,7 +110,7 @@ class ProtectionPipeline:
                         del engine
                         release_gpu()
                     notify(end, "Releasing PhantomSeal GPU memory")
-                if mode != "phantomseal":
+                if mode in ("faceshield", "phantomseal_faceshield"):
                     from protector import FaceShieldProtector
                     engine = self._shield_factory() if self._shield_factory else FaceShieldProtector(root_dir=self.root)
                     start = .60 if mode == "phantomseal_faceshield" else 0.
@@ -129,8 +139,10 @@ class ProtectionPipeline:
                           "peak_vram_gb": max((s.get("peak_vram_gb", 0.) for s in stages), default=0.),
                           "max_pixel_change": int(difference.max()),
                           "max_pixel_change_rgb": [int(v) for v in difference.max(axis=(0, 1))],
-                          "faceshield_noise_limit": noise_clamp if mode != "phantomseal" else None,
-                          "note": "Sequential experimental defense; combined protection requires independent face-swap evaluation."}
+                          "faceshield_noise_limit": noise_clamp if mode in ("faceshield", "phantomseal_faceshield") else None,
+                          "note": ("NullSwap reconstruction distributed by PhantomSeal; not the original authors' implementation."
+                                   if mode == "nullswap" else
+                                   "Experimental defense; protection requires independent face-swap evaluation.")}
                 (folder / "metadata.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
                 notify(1., "Protected PNG saved")
                 return result

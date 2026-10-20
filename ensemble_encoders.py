@@ -12,6 +12,7 @@ import pickletools
 import zipfile
 from collections.abc import Mapping
 from pathlib import Path
+from asset_paths import project_path
 
 import torch
 from torch import nn
@@ -92,11 +93,11 @@ def ensemble_paths(root_dir):
     root = Path(root_dir).resolve()
     checkpoints = checkpoint_directory(root)
     simswap = checkpoints / "simswap" / "arcface_checkpoint.tar"
-    return {
+    return {name: project_path(root, path) for name, path in {
         "simswap": simswap,
         "faceshifter": checkpoints / "faceshifter" / "model_ir_se50.pth",
         "hififace": checkpoints / "hififace" / "hififace_opensource_299999.ckpt",
-    }
+    }.items()}
 
 
 def _safe_checkpoint(path):
